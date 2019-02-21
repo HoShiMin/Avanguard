@@ -1,0 +1,9 @@
+[submodule "Avanguard/t1ha"]
+	path = Avanguard/t1ha
+	url = https://github.com/leo-yuriev/t1ha.git
+[submodule "Avanguard/HookLib"]
+	path = Avanguard/HookLib
+	url = https://github.com/HoShiMin/HookLib.git
+[submodule "Avanguard/xorstr"]
+	path = Avanguard/xorstr
+	url = https://github.com/JustasMasiulis/xorstr.git

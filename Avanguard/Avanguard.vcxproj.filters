@@ -1,22 +1,124 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Исходные файлы">
+    <Filter Include="Project Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Файлы заголовков">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="Project Files\AvanguardDefence">
+      <UniqueIdentifier>{48829084-6c2a-46d0-a57e-3c08992e7411}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Файлы ресурсов">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Project Files\AvnApi">
+      <UniqueIdentifier>{bb77756e-14f1-49d9-bfc4-28d0aae135da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Dll Filter">
+      <UniqueIdentifier>{3b8e1aaa-de89-4078-9b39-6bbe7ad1a406}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Threads Filter">
+      <UniqueIdentifier>{394bd8cc-45e1-4a9d-8a61-9829da9487bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Memory Filter">
+      <UniqueIdentifier>{9d02a5f4-30ec-44d9-b193-9f6c16e69f38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Files\Supplementation">
+      <UniqueIdentifier>{a09c6265-52d5-4f50-8256-f18c1aa22614}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Files\Supplementation\xorstr">
+      <UniqueIdentifier>{544b0bf3-d4b9-42fd-a78a-4a3cf421366e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Windows Hooks Filter">
+      <UniqueIdentifier>{e1d74c5c-7e0f-4e0d-87d4-7aae0e5149da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Stacktrace Checker">
+      <UniqueIdentifier>{191fd8f8-8e13-4937-8376-5cb0d166b875}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Sfc">
+      <UniqueIdentifier>{4f0ef6c8-21dc-45e9-953a-995c0f00358d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Avanguard.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>Project Files</Filter>
     </ClCompile>
+    <ClCompile Include="AvanguardDefence\AvnApi.cpp">
+      <Filter>Project Files\AvanguardDefence</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\AvnGlobals.cpp">
+      <Filter>Project Files\AvanguardDefence</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\DllFilter.cpp">
+      <Filter>Project Files\AvanguardDefence\Dll Filter</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\ThreadsFilter.cpp">
+      <Filter>Project Files\AvanguardDefence\Threads Filter</Filter>
+    </ClCompile>
+    <ClCompile Include="Supplementation\PEAnalyzer.cpp">
+      <Filter>Project Files\Supplementation</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\Logger.cpp">
+      <Filter>Project Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\WindowsHooksFilter.cpp">
+      <Filter>Project Files\AvanguardDefence\Windows Hooks Filter</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\StacktraceChecker.cpp">
+      <Filter>Project Files\AvanguardDefence\Stacktrace Checker</Filter>
+    </ClCompile>
+    <ClCompile Include="Supplementation\StringsAPI.cpp">
+      <Filter>Project Files\Supplementation</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\MemoryFilter.cpp">
+      <Filter>Project Files\AvanguardDefence\Memory Filter</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\SfcWrapper.cpp">
+      <Filter>Project Files\AvanguardDefence\Sfc</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AvanguardDefence\AvnDefinitions.h">
+      <Filter>Project Files\AvanguardDefence</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\NativeAPI.h">
+      <Filter>Project Files\AvanguardDefence</Filter>
+    </ClInclude>
+    <ClInclude Include="AvnApi\AvnApi.h">
+      <Filter>Project Files\AvnApi</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\AvnGlobals.h">
+      <Filter>Project Files\AvanguardDefence</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\DllFilter.h">
+      <Filter>Project Files\AvanguardDefence\Dll Filter</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\ThreadsFilter.h">
+      <Filter>Project Files\AvanguardDefence\Threads Filter</Filter>
+    </ClInclude>
+    <ClInclude Include="xorstr\include\xorstr.hpp">
+      <Filter>Project Files\Supplementation\xorstr</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\Locks.h">
+      <Filter>Project Files\AvanguardDefence</Filter>
+    </ClInclude>
+    <ClInclude Include="Supplementation\PEAnalyzer.h">
+      <Filter>Project Files\Supplementation</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\Logger.h">
+      <Filter>Project Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\WindowsHooksFilter.h">
+      <Filter>Project Files\AvanguardDefence\Windows Hooks Filter</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\StacktraceChecker.h">
+      <Filter>Project Files\AvanguardDefence\Stacktrace Checker</Filter>
+    </ClInclude>
+    <ClInclude Include="Supplementation\StringsAPI.h">
+      <Filter>Project Files\Supplementation</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\MemoryFilter.h">
+      <Filter>Project Files\AvanguardDefence\Memory Filter</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\SfcWrapper.h">
+      <Filter>Project Files\AvanguardDefence\Sfc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
