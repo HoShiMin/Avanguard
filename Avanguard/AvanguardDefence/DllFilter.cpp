@@ -208,19 +208,18 @@ namespace DllFilter {
         }
     };
 
-#ifdef FEATURE_WINDOWS_HOOKS_FILTER
-    class IgnoredModulesStorage final {
+    class ModulesNamesStorage final {
     private:
         mutable RWLock Lock;
         std::unordered_set<std::wstring> Modules;
     public:
-        IgnoredModulesStorage(const IgnoredModulesStorage&) = delete;
-        IgnoredModulesStorage(IgnoredModulesStorage&&) = delete;
-        IgnoredModulesStorage& operator = (const IgnoredModulesStorage&) = delete;
-        IgnoredModulesStorage& operator = (IgnoredModulesStorage&&) = delete;
+        ModulesNamesStorage(const ModulesNamesStorage&) = delete;
+        ModulesNamesStorage(ModulesNamesStorage&&) = delete;
+        ModulesNamesStorage& operator = (const ModulesNamesStorage&) = delete;
+        ModulesNamesStorage& operator = (ModulesNamesStorage&&) = delete;
 
-        IgnoredModulesStorage() : Lock(), Modules() {}
-        ~IgnoredModulesStorage() = default;
+        ModulesNamesStorage() : Lock(), Modules() {}
+        ~ModulesNamesStorage() = default;
 
         VOID Add(const std::wstring& ModuleName) {
             Lock.LockExclusive();
@@ -228,22 +227,22 @@ namespace DllFilter {
             Lock.UnlockExclusive();
         }
 
-        BOOL IsIgnored(const std::wstring& ModuleName) {
+        BOOL Exists(const std::wstring& ModuleName) {
             Lock.LockShared();
             BOOL Ignored = Modules.find(ModuleName) != Modules.end();
             Lock.UnlockShared();
             return Ignored;
         }
     };
-#endif
 
     static struct {
         _LdrRegisterDllNotification LdrRegisterDllNotification;
         _LdrUnregisterDllNotification LdrUnregisterDllNotification;
         PVOID Cookie;
         KnownModulesStorage KnownModules;
+        ModulesNamesStorage KnownModulesNames;
 #ifdef FEATURE_WINDOWS_HOOKS_FILTER
-        IgnoredModulesStorage IgnoredModules;
+        ModulesNamesStorage IgnoredModules;
 #endif
     } FilterData = {};
 
@@ -259,8 +258,12 @@ namespace DllFilter {
         std::wstring ModuleName = UnicodeStringToString(ModuleFileName);
 #endif
 
+        if (FilterData.KnownModulesNames.Exists(ModuleName)) {
+            return CallOriginal(LdrLoadDll)(PathToFile, Flags, ModuleFileName, ModuleHandle);
+        }
+
 #ifdef FEATURE_WINDOWS_HOOKS_FILTER
-        if (FilterData.IgnoredModules.IsIgnored(ModuleName)) {
+        if (FilterData.IgnoredModules.Exists(ModuleName)) {
             return STATUS_NOT_FOUND;
         }
 #endif
@@ -285,6 +288,7 @@ namespace DllFilter {
 #ifdef FEATURE_ALLOW_SYSTEM_MODULES
                     if (Sfc::IsSystemFile(ModuleName.c_str())) {
                         Log(L"[v] LdrLoadLibrary called from windows hooks handler, but allowed due to loading a system file: " + ModuleName);
+                        FilterData.KnownModulesNames.Add(ModuleName);
                         return CallOriginal(LdrLoadDll)(PathToFile, Flags, ModuleFileName, ModuleHandle);
                     }
 #endif
@@ -299,6 +303,7 @@ namespace DllFilter {
         }
 #endif
 
+        FilterData.KnownModulesNames.Add(ModuleName);
         return CallOriginal(LdrLoadDll)(PathToFile, Flags, ModuleFileName, ModuleHandle);
     }
 

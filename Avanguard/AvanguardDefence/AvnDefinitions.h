@@ -9,7 +9,7 @@
 
 #define FEATURE_THREADS_FILTER /* Agains of remote threads creation */
 #define FEATURE_DLL_FILTER /* To detect unknown or modified modules */
-#define FEATURE_MEMORY_FILTER /* For JIT support */
+#define FEATURE_MEMORY_FILTER /* Required for a JIT support */
 #define FEATURE_STACKTRACE_CHECK /* Check for unknown modules/memory call stack entries */
 
 #if defined FEATURE_DLL_FILTER && defined FEATURE_STACKTRACE_CHECK

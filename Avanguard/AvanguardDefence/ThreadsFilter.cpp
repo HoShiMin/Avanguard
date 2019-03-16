@@ -8,12 +8,14 @@
 #undef WIN32_NO_STATUS
 
 #include <winternl.h>
+#include <ntstatus.h>
 
 #include "NativeAPI.h"
 #include "AvnGlobals.h"
 
 #include "Locks.h"
 #include <unordered_map>
+#include <unordered_set>
 
 #include <string>
 #include "Logger.h"
@@ -74,12 +76,43 @@ namespace ThreadsFilter {
         }
     };
 
+    class ThreadPoolsStorage final {
+    private:
+        mutable RWLock Lock;
+        std::unordered_set<LPCVOID> TppWorkerThreads;
+    public:
+        ThreadPoolsStorage(const ThreadPoolsStorage&) = delete;
+        ThreadPoolsStorage(ThreadPoolsStorage&&) = delete;
+        ThreadPoolsStorage& operator = (const ThreadPoolsStorage&) = delete;
+        ThreadPoolsStorage& operator = (ThreadPoolsStorage&&) = delete;
+
+        ThreadPoolsStorage() : Lock(), TppWorkerThreads() {}
+        ~ThreadPoolsStorage() = default;
+
+        VOID Add(LPCVOID ThreadPoolEntry) {
+            Lock.LockExclusive();
+            TppWorkerThreads.emplace(ThreadPoolEntry);
+            Lock.UnlockExclusive();
+        }
+
+        BOOL Exists(LPCVOID ThreadPoolEntry) const {
+            Lock.LockShared();
+            BOOL IsExists = TppWorkerThreads.find(ThreadPoolEntry) != TppWorkerThreads.end();
+            Lock.UnlockShared();
+            return IsExists;
+        }
+    };
+
     static struct {
         ThreadsStorage Threads;
+        ThreadPoolsStorage ThreadPools;
         ULONG Pid;
+        volatile ULONG TppInitTid;
         PVOID pLdrInitializeThunk;
         PVOID pNtCreateThread;
         PVOID pNtCreateThreadEx;
+        PVOID pNtCreateWorkerFactory;
+        NTSTATUS(NTAPI*_TpAllocPool)(OUT PTP_POOL* PoolReturn, _Reserved_ PVOID Reserved);
         enum DENIED_EPs {
             epLdrLoadDll,
             epKBaseLoadLibraryA,
@@ -145,6 +178,11 @@ namespace ThreadsFilter {
         */
         PVOID EntryPoint = (PVOID)Context->Eax;
 #endif
+
+        if (FilterData.ThreadPools.Exists(EntryPoint)) {
+            Log(L"[v] Thread " + std::to_wstring(__pid()) + L" is a thread pool worker, allowed");
+            return CallOriginal(LdrInitializeThunk)(Context);
+        }
 
         BOOL IsKnownThread = FilterData.Threads.Unref(EntryPoint);
 
@@ -267,6 +305,39 @@ namespace ThreadsFilter {
         return Status;
     }
 
+    DeclareHook(
+        NTSTATUS, NTAPI, NtCreateWorkerFactory,
+        OUT PHANDLE WorkerFactoryHandleReturn,
+        IN ACCESS_MASK DesiredAccess,
+        IN OPTIONAL POBJECT_ATTRIBUTES ObjectAttributes,
+        IN HANDLE CompletionPortHandle,
+        IN HANDLE WorkerProcessHandle,
+        IN PVOID StartRoutine,
+        IN OPTIONAL PVOID StartParameter,
+        IN OPTIONAL ULONG MaxThreadCount,
+        IN OPTIONAL SIZE_T StackReserve,
+        IN OPTIONAL SIZE_T StackCommit
+    ) {
+        FilterData.ThreadPools.Add(StartRoutine);
+        if (__tid() == FilterData.TppInitTid) {
+            FilterData.TppInitTid = 0;
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        return CallOriginal(NtCreateWorkerFactory)(
+            WorkerFactoryHandleReturn,
+            DesiredAccess,
+            ObjectAttributes,
+            CompletionPortHandle,
+            WorkerProcessHandle,
+            StartRoutine,
+            StartParameter,
+            MaxThreadCount,
+            StackReserve,
+            StackCommit
+        );
+    }
+
     BOOL EnableThreadsFilter()
     {
         if (FilterData.Enabled) return TRUE;
@@ -277,23 +348,41 @@ namespace ThreadsFilter {
         if (!FilterData.pNtCreateThread)
             FilterData.pNtCreateThread = _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtCreateThread");
 
+        if (!FilterData.pLdrInitializeThunk || !FilterData.pNtCreateThread)
+            return FALSE; // NtCreateThreadEx and others are optional, but LdrInitializeThunk and NtCreateThread are required!
+
         if (!FilterData.pNtCreateThreadEx)
             FilterData.pNtCreateThreadEx = _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtCreateThreadEx");
 
-        if (!FilterData.pLdrInitializeThunk || !FilterData.pNtCreateThread)
-            return FALSE; // NtCreateThreadEx is optional, but LdrInitializeThunk and NtCreateThread are required!
+        if (!FilterData.pNtCreateWorkerFactory)
+            FilterData.pNtCreateWorkerFactory = _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtCreateWorkerFactory");
+
+        if (!FilterData._TpAllocPool)
+            FilterData._TpAllocPool = reinterpret_cast<decltype(FilterData._TpAllocPool)>(_GetProcAddress(AvnGlobals.hModules.hNtdll, "TpAllocPool"));
 
         InitializeDeniedEntryPoints();
         FilterData.Pid = __pid();
+        FilterData.TppInitTid = __tid();
 
         SetHookTarget(LdrInitializeThunk, FilterData.pLdrInitializeThunk);
         SetHookTarget(NtCreateThread, FilterData.pNtCreateThread);
         if (FilterData.pNtCreateThreadEx)
             SetHookTarget(NtCreateThreadEx, FilterData.pNtCreateThreadEx);
 
+        if (FilterData.pNtCreateWorkerFactory)
+            SetHookTarget(NtCreateWorkerFactory, FilterData.pNtCreateWorkerFactory);
+
         BOOL Status = EnableHook(LdrInitializeThunk) && EnableHook(NtCreateThread);
         if (FilterData.pNtCreateThreadEx)
             Status &= EnableHook(NtCreateThreadEx);
+
+        if (FilterData.pNtCreateWorkerFactory)
+            Status &= EnableHook(NtCreateWorkerFactory);
+
+        if (Status && FilterData.pNtCreateWorkerFactory && FilterData._TpAllocPool) {
+            PTP_POOL TpPool = NULL;
+            FilterData._TpAllocPool(&TpPool, NULL); // TppWorkerThread address initialization
+        }
 
         FilterData.Enabled = TRUE;
 
@@ -310,6 +399,7 @@ namespace ThreadsFilter {
         if (FilterData.pNtCreateThreadEx)
             DisableHook(NtCreateThreadEx);
         DisableHook(NtCreateThread);
+        DisableHook(NtCreateWorkerFactory);
         DisableHook(LdrInitializeThunk);
 
         FilterData.Threads.Clear();
