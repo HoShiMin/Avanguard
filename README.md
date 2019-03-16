@@ -10,7 +10,7 @@ Avanguard is the Windows anti-injection library written on C++.
 * [❌] AppInit_DLLs detection
 * [❌] Memory mapping based injects detection
 * [❌] APC filter
-* [❌] Threads context filter (to prevent a context steel)
+* [❌] Threads context filter (to prevent a context steal)
 * [❌] HWIDs collector
 * [❌] Java/C#/Delphi bindings and API
 * [❌] Anti-macroses (virtual input blocking)
