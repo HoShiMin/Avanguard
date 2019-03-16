@@ -18,7 +18,18 @@ Avanguard is the Windows anti-injection library written on C++.
 * [❌] Self-modification support
 * [❌] DACLs-based protection
 
+### 📝 Dependencies:
+* [HookLib](https://github.com/HoShiMin/HookLib) - lightweight and convenient hook library written on pure C and NativeAPI
+* [Zydis](https://github.com/zyantific/zydis) - extremely lightweight disassembler
+* [t1ha](https://github.com/leo-yuriev/t1ha) - the fastest hash ever
+* [xorstr](https://github.com/JustasMasiulis/xorstr) - a heavily vectorized C++17 compile-time strings encryptor
+
 ### 📐 How to use:
+First of all, clone it with all dependencies:
+```
+git clone --recursive https://github.com/HoShiMin/Avanguard.git
+```
+
 All you need is to build the Avanguard.dll and add it to your application's import table.
 ```cpp
 #include <cstdio>
