@@ -12,9 +12,11 @@
 #include "./AvanguardDefence/AvnDefinitions.h"
 #include "./AvanguardDefence/NativeAPI.h"
 
+#include "./AvanguardDefence/AppInitDLLs.h"
 #include "./AvanguardDefence/ThreadsFilter.h"
 #include "./AvanguardDefence/SfcWrapper.h"
 #include "./AvanguardDefence/DllFilter.h"
+#include "./AvanguardDefence/WindowsHooksFilter.h"
 #include "./AvanguardDefence/MemoryFilter.h"
 
 #include "./AvanguardDefence/Logger.h"
@@ -31,16 +33,7 @@ static VOID AvnInitialize()
 {
     if (AvnGlobals.Flags.IsAvnInitialized) return;
 
-#ifdef ENABLE_LOGGING
-    InitializeLogging();
-#endif
-
-    Log(L"[v] Avn started, initialization...");
-
-    // hModules initialization:
-    AvnGlobals.hModules.hNtdll = _GetModuleHandle(L"ntdll.dll");
-    AvnGlobals.hModules.hKernelBase = _GetModuleHandle(L"kernelbase.dll");
-    AvnGlobals.hModules.hKernel32 = _GetModuleHandle(L"kernel32.dll");
+    Log(L"[v] Avn late phase initialization...");
 
 #ifdef FEATURE_THREADS_FILTER
     if (ThreadsFilter::EnableThreadsFilter())
@@ -50,6 +43,9 @@ static VOID AvnInitialize()
 #endif
 
 #ifdef FEATURE_DLL_FILTER
+#ifdef FEATURE_WINDOWS_HOOKS_FILTER
+    WinHooksFilter::Initialize();
+#endif
 #ifdef FEATURE_ALLOW_SYSTEM_MODULES
     if (Sfc::InitializeSfc())
         Log(L"[v] Sfc initialized!");
@@ -108,8 +104,28 @@ static VOID NTAPI ApcInitialization(
 
 static VOID AvnInitStub(HMODULE hModule, BOOLEAN IsStaticLoaded)
 {
+#ifdef ENABLE_LOGGING
+    InitializeLogging();
+#endif
+
+    Log(L"[v] Avn started, early phase initialization...");
+
     AvnGlobals.hModules.hAvn = hModule;
     AvnGlobals.Flags.IsAvnStaticLoaded = IsStaticLoaded;
+
+    // hModules initialization:
+    AvnGlobals.hModules.hNtdll = _GetModuleHandle(L"ntdll.dll");
+    AvnGlobals.hModules.hKernelBase = _GetModuleHandle(L"kernelbase.dll");
+    AvnGlobals.hModules.hKernel32 = _GetModuleHandle(L"kernel32.dll");
+
+#ifdef FEATURE_APP_INIT_DLLS
+    // We must initialize it here, before the user32.dll loading:
+    if (AppInitDlls::DisableAppInitDlls())
+        Log(L"[v] AppInit_DLLs successfully disabled!");
+    else
+        Log(L"[x] Disabling AppInit_DLLs error!");
+#endif
+
 #ifdef STATIC_LOAD_AUTOSTART
     if (IsStaticLoaded) {
         NtQueueApcThread(

@@ -35,6 +35,9 @@
     <Filter Include="Project Files\AvanguardDefence\Sfc">
       <UniqueIdentifier>{4f0ef6c8-21dc-45e9-953a-995c0f00358d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Project Files\AvanguardDefence\AppInit_DLLs">
+      <UniqueIdentifier>{af952d28-b713-47ea-90cc-37de923880f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Avanguard.cpp">
@@ -72,6 +75,9 @@
     </ClCompile>
     <ClCompile Include="AvanguardDefence\SfcWrapper.cpp">
       <Filter>Project Files\AvanguardDefence\Sfc</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\AppInitDLLs.cpp">
+      <Filter>Project Files\AvanguardDefence\AppInit_DLLs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -119,6 +125,9 @@
     </ClInclude>
     <ClInclude Include="AvanguardDefence\SfcWrapper.h">
       <Filter>Project Files\AvanguardDefence\Sfc</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\AppInitDLLs.h">
+      <Filter>Project Files\AvanguardDefence\AppInit_DLLs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

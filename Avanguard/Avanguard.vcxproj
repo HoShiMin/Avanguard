@@ -180,6 +180,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Avanguard.cpp" />
+    <ClCompile Include="AvanguardDefence\AppInitDLLs.cpp" />
     <ClCompile Include="AvanguardDefence\AvnApi.cpp" />
     <ClCompile Include="AvanguardDefence\AvnGlobals.cpp" />
     <ClCompile Include="AvanguardDefence\DllFilter.cpp" />
@@ -193,6 +194,7 @@
     <ClCompile Include="Supplementation\StringsAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AvanguardDefence\AppInitDLLs.h" />
     <ClInclude Include="AvanguardDefence\AvnDefinitions.h" />
     <ClInclude Include="AvanguardDefence\AvnGlobals.h" />
     <ClInclude Include="AvanguardDefence\DllFilter.h" />

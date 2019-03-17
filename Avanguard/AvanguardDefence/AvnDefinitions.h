@@ -7,6 +7,7 @@
 
 #define STATIC_LOAD_AUTOSTART /* Autostart immediately after loading (only for static loading) */
 
+#define FEATURE_APP_INIT_DLLS /* Against of AppInit_DLLs injections */
 #define FEATURE_THREADS_FILTER /* Against of remote threads creation */
 #define FEATURE_DLL_FILTER /* To detect unknown or modified modules */
 #define FEATURE_MEMORY_FILTER /* Required for a JIT support */

@@ -52,11 +52,12 @@ void Log(const std::wstring& Text)
     printf("%ws\r\n", Text.c_str());
 #endif
 
+    if (hLogFile == INVALID_HANDLE_VALUE) return;
+
     SYSTEMTIME Time;
     GetSystemTime(&Time);
 
     static const WCHAR CaretReturn[] = L"\r\n";
-    if (hLogFile == INVALID_HANDLE_VALUE) return;
     std::wstring Str = 
         L"[" + IntToWide(Time.wDay) + L"." + IntToWide(Time.wMonth) + L"." + IntToWide(Time.wYear) +
         L", " + IntToWide(Time.wHour) + L":" + IntToWide(Time.wMinute) + L":" + IntToWide(Time.wSecond) +

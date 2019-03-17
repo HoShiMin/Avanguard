@@ -27,7 +27,7 @@ namespace WinHooksFilter {
         return reinterpret_cast<PebTeb::PPEB>(__peb())->KernelCallbackTable;
     }
 
-    static BOOL Initialize()
+    BOOL Initialize()
     {
         if (FilterData.Initialized) return TRUE;
         PVOID* KernelCallbacksTable = GetKernelCallbacksTable();
