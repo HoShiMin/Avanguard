@@ -125,10 +125,10 @@ namespace StringsAPI {
     template <typename T>
     T TrimRight(const T& Str) {
         if (Str.empty()) return T();
-        for (size_t i = Str.length() - 1; i >= 0; --i) {
-            decltype(T::value_type) c = Str[i];
+        for (size_t i = Str.length(); i != 0; --i) {
+            decltype(T::value_type) c = Str[i - 1];
             if (c != static_cast<decltype(T::value_type)>(' ') && c != static_cast<decltype(T::value_type)>('\t'))
-                return Str.substr(0, i + 1);
+                return Str.substr(0, i);
         }
         return T();
     }
