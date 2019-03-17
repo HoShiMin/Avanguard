@@ -113,55 +113,8 @@ namespace ThreadsFilter {
         PVOID pNtCreateThreadEx;
         PVOID pNtCreateWorkerFactory;
         NTSTATUS(NTAPI*_TpAllocPool)(OUT PTP_POOL* PoolReturn, _Reserved_ PVOID Reserved);
-        enum DENIED_EPs {
-            epLdrLoadDll,
-            epKBaseLoadLibraryA,
-            epKBaseLoadLibraryW,
-            epKBaseLoadLibraryExA,
-            epKBaseLoadLibraryExW,
-            epK32LoadLibraryA,
-            epK32LoadLibraryW,
-            epK32LoadLibraryExA,
-            epK32LoadLibraryExW,
-            epMax
-        };
-        LPCVOID DeniedEntryPoints[epMax];
         BOOL Enabled;
     } FilterData = {};
-
-    static VOID InitializeDeniedEntryPoints()
-    {
-        FilterData.DeniedEntryPoints[FilterData.epLdrLoadDll] = _GetProcAddress(AvnGlobals.hModules.hNtdll, "LdrLoadDll");
-        FilterData.DeniedEntryPoints[FilterData.epKBaseLoadLibraryA] = _GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryA");
-        FilterData.DeniedEntryPoints[FilterData.epKBaseLoadLibraryW] = _GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryW");
-        FilterData.DeniedEntryPoints[FilterData.epKBaseLoadLibraryExA] = _GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryExA");
-        FilterData.DeniedEntryPoints[FilterData.epKBaseLoadLibraryExW] = _GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryExW");
-        FilterData.DeniedEntryPoints[FilterData.epK32LoadLibraryA] = _GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryA");
-        FilterData.DeniedEntryPoints[FilterData.epK32LoadLibraryW] = _GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryW");
-        FilterData.DeniedEntryPoints[FilterData.epK32LoadLibraryExA] = _GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryExA");
-        FilterData.DeniedEntryPoints[FilterData.epK32LoadLibraryExW] = _GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryExW");
-    }
-
-    static BOOL IsUnknownThreadAllowed(PVOID EntryPoint)
-    {
-        HMODULE ImageBase = NULL;
-        RtlPcToFileHeader(EntryPoint, reinterpret_cast<PVOID*>(&ImageBase));
-        if (ImageBase) {
-            if (ImageBase != AvnGlobals.hModules.hNtdll
-                && ImageBase != AvnGlobals.hModules.hKernel32
-                && ImageBase != AvnGlobals.hModules.hKernelBase
-            ) {
-                return FALSE;
-            }
-
-            for (LPCVOID DeniedEp : FilterData.DeniedEntryPoints) {
-                if (EntryPoint == DeniedEp) return FALSE;
-            }
-
-            return TRUE;
-        }
-        return FALSE; // Unable to obtain a module -> Dynamic memory -> Denied
-    }
 
     DeclareHook(VOID, NTAPI, LdrInitializeThunk, PCONTEXT Context)
     {
@@ -187,13 +140,8 @@ namespace ThreadsFilter {
         BOOL IsKnownThread = FilterData.Threads.Unref(EntryPoint);
 
         if (!IsKnownThread) {
-            if (IsUnknownThreadAllowed(EntryPoint)) {
-                Log(L"[v] Thread " + std::to_wstring(__pid()) + L" has an unknown origin, but allowed EntryPoint");
-            }
-            else {
-                Log(L"[x] Thread " + std::to_wstring(__tid()) + L" has an unknown origin and blocked");
-                NtTerminateThread(NtCurrentThread(), 0);
-            }
+            Log(L"[x] Thread " + std::to_wstring(__tid()) + L" has an unknown origin and blocked");
+            NtTerminateThread(NtCurrentThread(), 0);
         }
         
 #ifdef FEATURE_DLL_FILTER
@@ -360,7 +308,6 @@ namespace ThreadsFilter {
         if (!FilterData._TpAllocPool)
             FilterData._TpAllocPool = reinterpret_cast<decltype(FilterData._TpAllocPool)>(_GetProcAddress(AvnGlobals.hModules.hNtdll, "TpAllocPool"));
 
-        InitializeDeniedEntryPoints();
         FilterData.Pid = __pid();
         FilterData.TppInitTid = __tid();
 
