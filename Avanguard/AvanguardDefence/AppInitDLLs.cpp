@@ -12,6 +12,7 @@
 #include "AvnGlobals.h"
 
 namespace AppInitDlls {
+
     DeclareHook(VOID, WINAPI, LoadAppInitDlls) 
     {
         return;

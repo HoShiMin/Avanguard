@@ -38,6 +38,12 @@
     <Filter Include="Project Files\AvanguardDefence\AppInit_DLLs">
       <UniqueIdentifier>{af952d28-b713-47ea-90cc-37de923880f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Contexts Filter">
+      <UniqueIdentifier>{fe2f7d8c-c4e6-4db3-9142-45b0a49700fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{f34b9d0b-a530-485c-99f4-43186d66e9ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Avanguard.cpp">
@@ -78,6 +84,9 @@
     </ClCompile>
     <ClCompile Include="AvanguardDefence\AppInitDLLs.cpp">
       <Filter>Project Files\AvanguardDefence\AppInit_DLLs</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\ContextsFilter.cpp">
+      <Filter>Project Files\AvanguardDefence\Contexts Filter</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -129,5 +138,13 @@
     <ClInclude Include="AvanguardDefence\AppInitDLLs.h">
       <Filter>Project Files\AvanguardDefence\AppInit_DLLs</Filter>
     </ClInclude>
+    <ClInclude Include="AvanguardDefence\ContextsFilter.h">
+      <Filter>Project Files\AvanguardDefence\Contexts Filter</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="SupportedOS.manifest">
+      <Filter>Resources</Filter>
+    </Manifest>
   </ItemGroup>
 </Project>

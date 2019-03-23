@@ -27,7 +27,7 @@ namespace WinHooksFilter {
         return reinterpret_cast<PebTeb::PPEB>(__peb())->KernelCallbackTable;
     }
 
-    BOOL Initialize()
+    BOOL InitializeWinHooksFilter()
     {
         if (FilterData.Initialized) return TRUE;
         PVOID* KernelCallbacksTable = GetKernelCallbacksTable();
@@ -56,7 +56,7 @@ namespace WinHooksFilter {
 
     BOOL IsWinHookOrigin(PVOID FramePtr)
     {
-        if (!FilterData.Initialized && !Initialize())
+        if (!FilterData.Initialized && !InitializeWinHooksFilter())
             return FALSE;
 
         if (FilterData.ClientLoadLibrary)

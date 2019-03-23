@@ -18,6 +18,7 @@
 #include "./AvanguardDefence/DllFilter.h"
 #include "./AvanguardDefence/WindowsHooksFilter.h"
 #include "./AvanguardDefence/MemoryFilter.h"
+#include "./AvanguardDefence/ContextsFilter.h"
 
 #include "./AvanguardDefence/Logger.h"
 
@@ -37,15 +38,16 @@ static VOID AvnInitialize()
 
 #ifdef FEATURE_THREADS_FILTER
     if (ThreadsFilter::EnableThreadsFilter())
-        Log(L"[v] Threads filter initialized!");
+        Log(L"[v] Threads filter enabled!");
     else
         Log(L"[x] Threads filter initialization error!");
 #endif
 
 #ifdef FEATURE_DLL_FILTER
 #ifdef FEATURE_WINDOWS_HOOKS_FILTER
-    WinHooksFilter::Initialize();
+    WinHooksFilter::InitializeWinHooksFilter();
 #endif
+
 #ifdef FEATURE_ALLOW_SYSTEM_MODULES
     if (Sfc::InitializeSfc())
         Log(L"[v] Sfc initialized!");
@@ -54,16 +56,23 @@ static VOID AvnInitialize()
 #endif
 
     if (DllFilter::EnableDllFilter())
-        Log(L"[v] Dll filter initialized!");
+        Log(L"[v] Dll filter enabled!");
     else
         Log(L"[x] Dll filter initialization error!");
 #endif
 
 #ifdef FEATURE_MEMORY_FILTER
     if (MemoryFilter::EnableMemoryFilter())
-        Log(L"[v] Memory filter initialized!");
+        Log(L"[v] Memory filter enabled!");
     else
         Log(L"[x] Memory filter initialization error!");
+#endif
+
+#ifdef FEATURE_CONTEXTS_FILTER
+    if (ContextsFilter::EnableContextsFilter())
+        Log(L"[v] Contexts filter enabled!");
+    else
+        Log(L"[x] Contexts filter initialization error!");
 #endif
 
     AvnGlobals.Flags.IsAvnInitialized = TRUE;
@@ -77,6 +86,10 @@ static VOID AvnStartDefence()
 
 static VOID AvnStopDefence()
 {
+#ifdef FEATURE_CONTEXTS_FILTER
+    ContextsFilter::DisableContextsFilter();
+#endif
+
 #ifdef FEATURE_MEMORY_FILTER
     MemoryFilter::DisableMemoryFilter();
 #endif

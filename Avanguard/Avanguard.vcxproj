@@ -83,6 +83,8 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <AdditionalOptions>/Qpar-report:1 /Qvec-report:1</AdditionalOptions>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -92,6 +94,9 @@
       <IgnoreSpecificDefaultLibraries>msvcrtd</IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration)\t1ha-static;.\HookLib\HookLib\Zydis\msvc\bin\DebugX86\</AdditionalLibraryDirectories>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>SupportedOS.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -105,6 +110,8 @@
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Qpar-report:1 /Qvec-report:1</AdditionalOptions>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -114,6 +121,9 @@
       <IgnoreSpecificDefaultLibraries>msvcrtd</IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration)\t1ha-static;.\HookLib\HookLib\Zydis\msvc\bin\DebugX64\</AdditionalLibraryDirectories>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>SupportedOS.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -134,6 +144,8 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <AdditionalOptions>/Qpar-report:1 /Qvec-report:1</AdditionalOptions>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -146,6 +158,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration)\t1ha-static;.\HookLib\HookLib\Zydis\msvc\bin\ReleaseX86\</AdditionalLibraryDirectories>
       <Profile>true</Profile>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>SupportedOS.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -165,6 +180,8 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <AdditionalOptions>/Qpar-report:1 /Qvec-report:1</AdditionalOptions>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -177,12 +194,16 @@
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration)\t1ha-static;.\HookLib\HookLib\Zydis\msvc\bin\ReleaseX64\</AdditionalLibraryDirectories>
       <Profile>true</Profile>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>SupportedOS.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Avanguard.cpp" />
     <ClCompile Include="AvanguardDefence\AppInitDLLs.cpp" />
     <ClCompile Include="AvanguardDefence\AvnApi.cpp" />
     <ClCompile Include="AvanguardDefence\AvnGlobals.cpp" />
+    <ClCompile Include="AvanguardDefence\ContextsFilter.cpp" />
     <ClCompile Include="AvanguardDefence\DllFilter.cpp" />
     <ClCompile Include="AvanguardDefence\Logger.cpp" />
     <ClCompile Include="AvanguardDefence\MemoryFilter.cpp" />
@@ -197,6 +218,7 @@
     <ClInclude Include="AvanguardDefence\AppInitDLLs.h" />
     <ClInclude Include="AvanguardDefence\AvnDefinitions.h" />
     <ClInclude Include="AvanguardDefence\AvnGlobals.h" />
+    <ClInclude Include="AvanguardDefence\ContextsFilter.h" />
     <ClInclude Include="AvanguardDefence\DllFilter.h" />
     <ClInclude Include="AvanguardDefence\Locks.h" />
     <ClInclude Include="AvanguardDefence\Logger.h" />
@@ -210,6 +232,9 @@
     <ClInclude Include="Supplementation\PEAnalyzer.h" />
     <ClInclude Include="Supplementation\StringsAPI.h" />
     <ClInclude Include="xorstr\include\xorstr.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="SupportedOS.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

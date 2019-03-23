@@ -291,17 +291,17 @@ namespace DllFilter {
                         FilterData.KnownModulesNames.Add(ModuleName);
                         return CallOriginal(LdrLoadDll)(PathToFile, Flags, ModuleFileName, ModuleHandle);
                     }
-#endif
+#endif // FEATURE_ALLOW_SYSTEM_MODULES
                     FilterData.IgnoredModules.Add(ModuleName);
                     Log(L"[x] LdrLoadLibrary called from windows hooks handler, cancelled");
                     break;
-#endif
+#endif // FEATURE_WINDOWS_HOOKS_FILTER
                 }
                 if (ModuleHandle) *ModuleHandle = NULL;
                 return STATUS_NOT_FOUND;
             }
         }
-#endif
+#endif // FEATURE_STACKTRACE_CHECK
 
         FilterData.KnownModulesNames.Add(ModuleName);
         return CallOriginal(LdrLoadDll)(PathToFile, Flags, ModuleFileName, ModuleHandle);

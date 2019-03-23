@@ -108,27 +108,16 @@ namespace ThreadsFilter {
         ThreadPoolsStorage ThreadPools;
         ULONG Pid;
         volatile ULONG TppInitTid;
-        PVOID pLdrInitializeThunk;
-        PVOID pNtCreateThread;
-        PVOID pNtCreateThreadEx;
-        PVOID pNtCreateWorkerFactory;
-        NTSTATUS(NTAPI*_TpAllocPool)(OUT PTP_POOL* PoolReturn, _Reserved_ PVOID Reserved);
         BOOL Enabled;
     } FilterData = {};
 
     DeclareHook(VOID, NTAPI, LdrInitializeThunk, PCONTEXT Context)
     {
 #ifdef _AMD64_
-        /*
-            RCX = EntryPoint
-            RDX = Argument
-        */
+        // RCX = EntryPoint, RDX = Argument:
         PVOID EntryPoint = (PVOID)Context->Rcx;
 #else
-        /*
-            EAX = EntryPoint
-            EBX = Argument
-        */
+        // EAX = EntryPoint, EBX = Argument:
         PVOID EntryPoint = (PVOID)Context->Eax;
 #endif
 
@@ -290,61 +279,41 @@ namespace ThreadsFilter {
     {
         if (FilterData.Enabled) return TRUE;
 
-        if (!FilterData.pLdrInitializeThunk)
-            FilterData.pLdrInitializeThunk = _GetProcAddress(AvnGlobals.hModules.hNtdll, "LdrInitializeThunk");
-
-        if (!FilterData.pNtCreateThread)
-            FilterData.pNtCreateThread = _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtCreateThread");
-
-        if (!FilterData.pLdrInitializeThunk || !FilterData.pNtCreateThread)
-            return FALSE; // NtCreateThreadEx and others are optional, but LdrInitializeThunk and NtCreateThread are required!
-
-        if (!FilterData.pNtCreateThreadEx)
-            FilterData.pNtCreateThreadEx = _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtCreateThreadEx");
-
-        if (!FilterData.pNtCreateWorkerFactory)
-            FilterData.pNtCreateWorkerFactory = _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtCreateWorkerFactory");
-
-        if (!FilterData._TpAllocPool)
-            FilterData._TpAllocPool = reinterpret_cast<decltype(FilterData._TpAllocPool)>(_GetProcAddress(AvnGlobals.hModules.hNtdll, "TpAllocPool"));
-
         FilterData.Pid = __pid();
         FilterData.TppInitTid = __tid();
 
-        SetHookTarget(LdrInitializeThunk, FilterData.pLdrInitializeThunk);
-        SetHookTarget(NtCreateThread, FilterData.pNtCreateThread);
-        if (FilterData.pNtCreateThreadEx)
-            SetHookTarget(NtCreateThreadEx, FilterData.pNtCreateThreadEx);
+        if (!SetHookTarget(LdrInitializeThunk, _GetProcAddress(AvnGlobals.hModules.hNtdll, "LdrInitializeThunk"))
+            || !SetHookTarget(NtCreateThread, _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtCreateThread"))
+        ) return FALSE;
 
-        if (FilterData.pNtCreateWorkerFactory)
-            SetHookTarget(NtCreateWorkerFactory, FilterData.pNtCreateWorkerFactory);
-
-        BOOL Status = EnableHook(LdrInitializeThunk) && EnableHook(NtCreateThread);
-        if (FilterData.pNtCreateThreadEx)
+        BOOLEAN Status = EnableHook(LdrInitializeThunk) && EnableHook(NtCreateThread);
+        if (SetHookTarget(NtCreateThreadEx, _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtCreateThreadEx")))
             Status &= EnableHook(NtCreateThreadEx);
 
-        if (FilterData.pNtCreateWorkerFactory)
+        if (SetHookTarget(NtCreateWorkerFactory, _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtCreateWorkerFactory"))) {
             Status &= EnableHook(NtCreateWorkerFactory);
-
-        if (Status && FilterData.pNtCreateWorkerFactory && FilterData._TpAllocPool) {
-            PTP_POOL TpPool = NULL;
-            FilterData._TpAllocPool(&TpPool, NULL); // TppWorkerThread address initialization
+            if (Status) {
+                auto TpAllocPool = reinterpret_cast<
+                    NTSTATUS(NTAPI*)(OUT PTP_POOL * PoolReturn, _Reserved_ PVOID Reserved)
+                >(_GetProcAddress(AvnGlobals.hModules.hNtdll, "TpAllocPool"));
+                
+                if (TpAllocPool) {
+                    PTP_POOL TpPool = NULL;
+                    TpAllocPool(&TpPool, NULL); // TppWorkerThread address initialization
+                }
+            }
         }
-
-        FilterData.Enabled = TRUE;
 
         if (!Status)
             DisableThreadsFilter();
 
+        FilterData.Enabled = Status;
         return FilterData.Enabled;
     }
 
     VOID DisableThreadsFilter()
     {
-        if (!FilterData.Enabled) return;
-
-        if (FilterData.pNtCreateThreadEx)
-            DisableHook(NtCreateThreadEx);
+        DisableHook(NtCreateThreadEx);
         DisableHook(NtCreateThread);
         DisableHook(NtCreateWorkerFactory);
         DisableHook(LdrInitializeThunk);

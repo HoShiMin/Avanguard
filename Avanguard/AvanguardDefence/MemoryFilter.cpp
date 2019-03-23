@@ -117,9 +117,6 @@ namespace MemoryFilter {
 
     static struct {
         MemoryStorage Storage;
-        PVOID pNtAllocateVirtualMemory;
-        PVOID pNtProtectVirtualMemory;
-        PVOID pNtFreeVirtualMemory;
         ULONG Pid;
         BOOLEAN Enabled;
     } FilterData = {};
@@ -210,29 +207,19 @@ namespace MemoryFilter {
     {
         if (FilterData.Enabled) return TRUE;
 
-        FilterData.pNtAllocateVirtualMemory = _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtAllocateVirtualMemory");
-        FilterData.pNtProtectVirtualMemory = _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtProtectVirtualMemory");
-        FilterData.pNtFreeVirtualMemory = _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtFreeVirtualMemory");
-
-        if (!FilterData.pNtAllocateVirtualMemory
-            || !FilterData.pNtFreeVirtualMemory
-            || !FilterData.pNtProtectVirtualMemory
-        ) return FALSE;
-
         FilterData.Pid = __pid();
         FilterData.Storage.Collect();
         
-        SetHookTarget(NtAllocateVirtualMemory, FilterData.pNtAllocateVirtualMemory);
-        SetHookTarget(NtProtectVirtualMemory, FilterData.pNtProtectVirtualMemory);
-        SetHookTarget(NtFreeVirtualMemory, FilterData.pNtFreeVirtualMemory);
+        SetHookTarget(NtAllocateVirtualMemory, _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtAllocateVirtualMemory"));
+        SetHookTarget(NtProtectVirtualMemory, _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtProtectVirtualMemory"));
+        SetHookTarget(NtFreeVirtualMemory, _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtFreeVirtualMemory"));
 
         FilterData.Enabled = EnableHook(NtAllocateVirtualMemory)
             && EnableHook(NtProtectVirtualMemory)
             && EnableHook(NtFreeVirtualMemory);
 
-        if (!FilterData.Enabled) {
+        if (!FilterData.Enabled)
             DisableMemoryFilter();
-        }
 
         return FilterData.Enabled;
     }
