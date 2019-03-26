@@ -54,6 +54,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -200,6 +201,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Avanguard.cpp" />
+    <ClCompile Include="AvanguardDefence\ApcFilter.cpp" />
     <ClCompile Include="AvanguardDefence\AppInitDLLs.cpp" />
     <ClCompile Include="AvanguardDefence\AvnApi.cpp" />
     <ClCompile Include="AvanguardDefence\AvnGlobals.cpp" />
@@ -215,6 +217,7 @@
     <ClCompile Include="Supplementation\StringsAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AvanguardDefence\ApcFilter.h" />
     <ClInclude Include="AvanguardDefence\AppInitDLLs.h" />
     <ClInclude Include="AvanguardDefence\AvnDefinitions.h" />
     <ClInclude Include="AvanguardDefence\AvnGlobals.h" />
@@ -236,7 +239,15 @@
   <ItemGroup>
     <Manifest Include="SupportedOS.manifest" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="AvanguardDefence\ApcStub.asm">
+      <FileType>Document</FileType>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AMD64</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AMD64</PreprocessorDefinitions>
+    </MASM>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
 </Project>

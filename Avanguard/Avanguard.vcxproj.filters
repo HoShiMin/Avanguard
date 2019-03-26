@@ -44,6 +44,9 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{f34b9d0b-a530-485c-99f4-43186d66e9ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Project Files\AvanguardDefence\APC Filter">
+      <UniqueIdentifier>{25174eae-1070-4aa0-9ce8-50b58e857e0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Avanguard.cpp">
@@ -87,6 +90,9 @@
     </ClCompile>
     <ClCompile Include="AvanguardDefence\ContextsFilter.cpp">
       <Filter>Project Files\AvanguardDefence\Contexts Filter</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\ApcFilter.cpp">
+      <Filter>Project Files\AvanguardDefence\APC Filter</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -141,10 +147,18 @@
     <ClInclude Include="AvanguardDefence\ContextsFilter.h">
       <Filter>Project Files\AvanguardDefence\Contexts Filter</Filter>
     </ClInclude>
+    <ClInclude Include="AvanguardDefence\ApcFilter.h">
+      <Filter>Project Files\AvanguardDefence\APC Filter</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="SupportedOS.manifest">
       <Filter>Resources</Filter>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="AvanguardDefence\ApcStub.asm">
+      <Filter>Project Files\AvanguardDefence\APC Filter</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

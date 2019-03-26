@@ -67,6 +67,13 @@ extern "C" NTSYSAPI NTSTATUS NTAPI NtQueryVirtualMemory(
     OUT OPTIONAL PSIZE_T ResultLength
 );
 
+extern "C" NTSYSAPI NTSTATUS NTAPI NtContinue(
+    IN PCONTEXT ThreadContext,
+    IN BOOLEAN RaiseAlert
+);
+
+extern "C" NTSYSAPI NTSTATUS NTAPI NtTestAlert();
+
 #define LDR_DLL_NOTIFICATION_REASON_LOADED   1
 #define LDR_DLL_NOTIFICATION_REASON_UNLOADED 2
 

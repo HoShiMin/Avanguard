@@ -11,6 +11,7 @@
 #define FEATURE_THREADS_FILTER /* Against of remote threads creation */
 #define FEATURE_DLL_FILTER /* To detect unknown or modified modules */
 #define FEATURE_MEMORY_FILTER /* Required for a JIT support */
+#define FEATURE_APC_FILTER /* Against of APC-based injections */
 
 #if defined FEATURE_DLL_FILTER || defined FEATURE_MEMORY_FILTER
     #define FEATURE_STACKTRACE_CHECK /* Check for unknown modules/memory call stack entries */

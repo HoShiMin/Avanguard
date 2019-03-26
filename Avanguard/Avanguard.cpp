@@ -19,6 +19,7 @@
 #include "./AvanguardDefence/WindowsHooksFilter.h"
 #include "./AvanguardDefence/MemoryFilter.h"
 #include "./AvanguardDefence/ContextsFilter.h"
+#include "./AvanguardDefence/ApcFilter.h"
 
 #include "./AvanguardDefence/Logger.h"
 
@@ -75,6 +76,13 @@ static VOID AvnInitialize()
         Log(L"[x] Contexts filter initialization error!");
 #endif
 
+#ifdef FEATURE_APC_FILTER
+    if (ApcFilter::EnableApcFilter())
+        Log(L"[v] APC filter enabled!");
+    else
+        Log(L"[x] APC filter initialization error!");
+#endif
+
     AvnGlobals.Flags.IsAvnInitialized = TRUE;
     Log(L"[v] Avn initialized!");
 }
@@ -86,6 +94,10 @@ static VOID AvnStartDefence()
 
 static VOID AvnStopDefence()
 {
+#ifdef FEATURE_APC_FILTER
+    ApcFilter::DisableApcFilter();
+#endif
+
 #ifdef FEATURE_CONTEXTS_FILTER
     ContextsFilter::DisableContextsFilter();
 #endif
