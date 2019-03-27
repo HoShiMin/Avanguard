@@ -158,15 +158,15 @@ namespace ApcFilter {
     BOOL EnableApcFilter()
     {
         FilterData.ApcRoutines.Clear();
-        FilterData.ApcRoutines.AddAllowed(_GetProcAddress(AvnGlobals.hModules.hNtdll, "LdrLoadDll"));
-        FilterData.ApcRoutines.AddAllowed(_GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryA"));
-        FilterData.ApcRoutines.AddAllowed(_GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryW"));
-        FilterData.ApcRoutines.AddAllowed(_GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryExA"));
-        FilterData.ApcRoutines.AddAllowed(_GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryExW"));
-        FilterData.ApcRoutines.AddAllowed(_GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryA"));
-        FilterData.ApcRoutines.AddAllowed(_GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryW"));
-        FilterData.ApcRoutines.AddAllowed(_GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryExA"));
-        FilterData.ApcRoutines.AddAllowed(_GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryExW"));
+        FilterData.ApcRoutines.AddDenied(_GetProcAddress(AvnGlobals.hModules.hNtdll, "LdrLoadDll"));
+        FilterData.ApcRoutines.AddDenied(_GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryA"));
+        FilterData.ApcRoutines.AddDenied(_GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryW"));
+        FilterData.ApcRoutines.AddDenied(_GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryExA"));
+        FilterData.ApcRoutines.AddDenied(_GetProcAddress(AvnGlobals.hModules.hKernel32, "LoadLibraryExW"));
+        FilterData.ApcRoutines.AddDenied(_GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryA"));
+        FilterData.ApcRoutines.AddDenied(_GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryW"));
+        FilterData.ApcRoutines.AddDenied(_GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryExA"));
+        FilterData.ApcRoutines.AddDenied(_GetProcAddress(AvnGlobals.hModules.hKernelBase, "LoadLibraryExW"));
 
         SetHookTarget(NtQueueApcThread, _GetProcAddress(AvnGlobals.hModules.hNtdll, "NtQueueApcThread"));
 
