@@ -55,7 +55,7 @@ namespace ApcFilter {
         VOID AddDenied(LPCVOID EntryPoint) {
             if (EntryPoint) {
                 Lock.LockExclusive();
-                Allowed.emplace(EntryPoint);
+                Denied.emplace(EntryPoint);
                 Lock.UnlockExclusive();
             }
         }
