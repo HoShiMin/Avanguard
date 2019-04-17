@@ -26,7 +26,11 @@
 #include "MemoryFilter.h"
 #endif
 
+#include "ThreatsHandler.h"
+
 #include "ApcFilter.h"
+
+#include "Logger.h"
 
 namespace ApcFilter {
 
@@ -116,6 +120,30 @@ namespace ApcFilter {
     extern "C" {
         VOID NTAPI KiApcStub(); // KiUserApcDispatcher hook (defined in ApcStub.asm)
 
+        static VOID HandleApc(PVOID ApcRoutine, PVOID Argument, PCONTEXT Context)
+        {
+            if (!IsApcAllowed(ApcRoutine)) {
+                Log(L"[!] Unknown APC");
+                switch (Notifier::ReportApc(ApcRoutine, Argument)) {
+                case Notifier::tdBlockOrIgnore:
+                    Log(L"[x] Discarding APC by external decision");
+                    DiscardApc(Context);
+                    [[fallthrough]];
+                case Notifier::tdAllow:
+                    Log(L"[v] APC allowed by external decision");
+                    return;
+                case Notifier::tdBlockOrTerminate:
+                    Log(L"[x] Discarding APC by external decision");
+                    DiscardApc(Context);
+                    [[fallthrough]];
+                case Notifier::tdTerminate:
+                    Log(L"[x] External decision about APC caused fastfail");
+                    __fastfail(0);
+                    break;
+                }
+            }
+        }
+
 #ifdef _AMD64_
         // Context passes through a stack! Don't call it directly from a C/C++ code!
         VOID (NTAPI *OriginalApcDispatcher)(CONTEXT Context) = NULL;
@@ -123,8 +151,7 @@ namespace ApcFilter {
         VOID NTAPI ApcHandler(PCONTEXT Context) // Calls from KiApcStub() in ApcStub.asm
         {
             // ApcRoutine = Context->P4Home, Arg = Context->P1Home:
-            if (!IsApcAllowed(reinterpret_cast<PVOID>(Context->P4Home)))
-                DiscardApc(Context);
+            HandleApc(reinterpret_cast<PVOID>(Context->P4Home), reinterpret_cast<PVOID>(Context->P1Home), Context);
         }
 #else
         // All arguments passes through a stack! Don't call it directly from a C/C++ code!
@@ -137,8 +164,7 @@ namespace ApcFilter {
 
         VOID NTAPI ApcHandler(PVOID ApcRoutine, PVOID Arg, PCONTEXT Context) // Calls from KiApcStub() in ApcStub.asm
         {
-            if (!IsApcAllowed(ApcRoutine))
-                DiscardApc(Context);
+            HandleApc(ApcRoutine, Arg, Context);
         }
 #endif
     }

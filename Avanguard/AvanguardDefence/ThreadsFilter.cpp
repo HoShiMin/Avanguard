@@ -30,6 +30,8 @@
     #include "MemoryFilter.h"
 #endif
 
+#include "ThreatsHandler.h"
+
 #include "ThreadsFilter.h"
 
 namespace ThreadsFilter {
@@ -111,26 +113,51 @@ namespace ThreadsFilter {
         BOOL Enabled;
     } FilterData = {};
 
+    static VOID HandleDeniedThreadDecision(Notifier::THREAT_DECISION Decision)
+    {
+        switch (Decision) {
+        case Notifier::tdAllow:
+            Log(L"[v] Thread " + std::to_wstring(__tid()) + L" is allowed by external decision");
+            return;
+        case Notifier::tdBlockOrIgnore:
+            Log(L"[x] Thread " + std::to_wstring(__tid()) + L" is blocked by external decision");
+            NtTerminateThread(NtCurrentThread(), 0);
+            return;
+        case Notifier::tdBlockOrTerminate:
+            Log(L"[x] Thread " + std::to_wstring(__tid()) + L" is blocked by external decision");
+            NtTerminateThread(NtCurrentThread(), 0);
+            __fastfail(0);
+            break;
+        case Notifier::tdTerminate:
+            Log(L"[x] Thread " + std::to_wstring(__tid()) + L" caused fastfail by external decision");
+            __fastfail(0);
+            break;
+        }
+    }
+
     DeclareHook(VOID, NTAPI, LdrInitializeThunk, PCONTEXT Context)
     {
 #ifdef _AMD64_
         // RCX = EntryPoint, RDX = Argument:
-        PVOID EntryPoint = (PVOID)Context->Rcx;
+        PVOID EntryPoint = reinterpret_cast<PVOID>(Context->Rcx);
+        PVOID Argument = reinterpret_cast<PVOID>(Context->Rdx);
 #else
         // EAX = EntryPoint, EBX = Argument:
-        PVOID EntryPoint = (PVOID)Context->Eax;
+        PVOID EntryPoint = reinterpret_cast<PVOID>(Context->Eax);
+        PVOID Argument = reinterpret_cast<PVOID>(Context->Ebx);
 #endif
 
         if (FilterData.ThreadPools.Exists(EntryPoint)) {
-            Log(L"[v] Thread " + std::to_wstring(__pid()) + L" is a thread pool worker, allowed");
+            Log(L"[v] Thread " + std::to_wstring(__tid()) + L" is a thread pool worker, allowed");
             return CallOriginal(LdrInitializeThunk)(Context);
         }
 
         BOOL IsKnownThread = FilterData.Threads.Unref(EntryPoint);
 
         if (!IsKnownThread) {
-            Log(L"[x] Thread " + std::to_wstring(__tid()) + L" has an unknown origin and blocked");
-            NtTerminateThread(NtCurrentThread(), 0);
+            Log(L"[!] Thread " + std::to_wstring(__tid()) + L" has an unknown origin");
+            HandleDeniedThreadDecision(Notifier::ReportRemoteThread(EntryPoint, Argument));
+            CallOriginal(LdrInitializeThunk)(Context);
         }
         
 #ifdef FEATURE_DLL_FILTER
@@ -138,18 +165,21 @@ namespace ThreadsFilter {
         if (!DllFilter::IsAddressInKnownModule(EntryPoint)) {
 #ifdef FEATURE_MEMORY_FILTER
             if (!MemoryFilter::IsMemoryKnown(EntryPoint)) {
-                Log(L"[x] Entry point of thread " + std::to_wstring(__tid()) + L" is in unknown memory, thread is blocked");
-                NtTerminateThread(NtCurrentThread(), 0);
+                Log(L"[!] Entry point of thread " + std::to_wstring(__tid()) + L" is in unknown memory");
+                HandleDeniedThreadDecision(Notifier::ReportThreadInUnknownMemory(EntryPoint, Argument));
+                CallOriginal(LdrInitializeThunk)(Context);
             }
 #else
-            Log(L"[x] Entry point of thread " + std::to_wstring(__tid()) + L" is in unknown module, thread is blocked");
-            NtTerminateThread(NtCurrentThread(), 0);
+            Log(L"[!] Entry point of thread " + std::to_wstring(__tid()) + L" is in unknown module");
+            HandleDeniedThreadDecision(Notifier::ReportThreadInUnknownModule(EntryPoint, Argument));
+            CallOriginal(LdrInitializeThunk)(Context);
 #endif
         } 
 #elif defined FEATURE_MEMORY_FILTER
-        if (!MemoryChecked && !MemoryFilter::IsMemoryKnown(EntryPoint)) {
-            Log(L"[x] Entry point of thread " + std::to_wstring(__tid()) + L" is in unknown memory, thread is blocked");
-            NtTerminateThread(NtCurrentThread(), 0);
+        if (!MemoryFilter::IsMemoryKnown(EntryPoint)) {
+            Log(L"[!] Entry point of thread " + std::to_wstring(__tid()) + L" is in unknown memory");
+            HandleDeniedThreadDecision(Notifier::ReportThreadInUnknownMemory(EntryPoint, Argument));
+            CallOriginal(LdrInitializeThunk)(Context);
         }
 #endif
 

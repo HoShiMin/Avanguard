@@ -334,7 +334,7 @@ namespace StringsAPI {
 
 #ifdef _SET_
     template <typename T>
-    size_t Tokenize(const T& Str, const T& Delimiters, __out std::vector<T>& Tokens) {
+    size_t Tokenize(const T& Str, const T& Delimiters, __out std::set<T>& Tokens) {
         Tokens.clear();
 
         size_t Start = Str.find_first_not_of(Delimiters);

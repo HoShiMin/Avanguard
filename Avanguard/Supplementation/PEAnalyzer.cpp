@@ -232,7 +232,7 @@ PEAnalyzer::PEAnalyzer() {
     Clear();
 }
 
-PEAnalyzer::PEAnalyzer(HMODULE hModule, BOOL RawModule) {
+PEAnalyzer::PEAnalyzer(HMODULE hModule, BOOL RawModule, BOOL ParseAll) {
     LoadModule(hModule, RawModule);
 }
 
@@ -240,7 +240,7 @@ PEAnalyzer::~PEAnalyzer() {
     Clear();
 }
 
-BOOL PEAnalyzer::LoadModule(HMODULE hModule, BOOL RawModule) {
+BOOL PEAnalyzer::LoadModule(HMODULE hModule, BOOL RawModule, BOOL ParseAll) {
     Clear();
 
     IsRawModule = RawModule;
@@ -276,11 +276,13 @@ BOOL PEAnalyzer::LoadModule(HMODULE hModule, BOOL RawModule) {
     SectionAlignment = OptionalHeader->SectionAlignment;
     NeedToAlign = SectionAlignment >= MINIMAL_SECTION_ALIGNMENT;
 
-    FillSectionsInfo();
-    FillRelocsInfo();
-    FillImportsInfo();
-    FillDelayedImportsInfo();
-    FillExportsInfo();
+    if (ParseAll) {
+        FillSectionsInfo();
+        FillRelocsInfo();
+        FillImportsInfo();
+        FillDelayedImportsInfo();
+        FillExportsInfo();
+    }
 
     return TRUE;
 }
@@ -306,6 +308,11 @@ void PEAnalyzer::Clear() {
     Exports.NumberOfFunctions = 0;
     Exports.Name.clear();
     Exports.Exports.clear();
+    SectionsParsed = FALSE;
+    RelocsParsed = FALSE;
+    ImportsParsed = FALSE;
+    DelayedImportsParsed = FALSE;
+    ExportsParsed = FALSE;
 }
 
 BOOL PEAnalyzer::ValidatePESignatures() {

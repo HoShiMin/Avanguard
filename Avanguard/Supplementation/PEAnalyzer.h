@@ -5,6 +5,7 @@
     - Windows.h
     - vector
     - unordered_map
+    - string
 */
 
 /*
@@ -109,6 +110,12 @@ private:
 
     BOOL ValidatePESignatures();
 
+    BOOL SectionsParsed;
+    BOOL RelocsParsed;
+    BOOL ImportsParsed;
+    BOOL DelayedImportsParsed;
+    BOOL ExportsParsed;
+
     void FillSectionsInfo();
     void FillRelocsInfo();
     void FillImportsInfo();
@@ -118,18 +125,48 @@ private:
     void FillImportsSet(PIMAGE_THUNK_DATA Thunk, PIMAGE_THUNK_DATA OriginalThunk, OUT IMPORTS_SET& ImportsSet);
 public:
     PEAnalyzer();
-    PEAnalyzer(HMODULE hModule, BOOL RawModule);
+    PEAnalyzer(HMODULE hModule, BOOL RawModule, BOOL ParseAll = FALSE);
     ~PEAnalyzer();
 
-    BOOL LoadModule(HMODULE hModule, BOOL RawModule);
+    BOOL LoadModule(HMODULE hModule, BOOL RawModule, BOOL ParseAll = FALSE);
 
     void Clear();
 
-    const SECTIONS_SET& GetSectionsInfo() const { return Sections; }
-    const RELOCS_SET& GetRelocsInfo() const { return Relocs; }
-    const IMPORTS_MAP& GetImportsInfo() const { return Imports; }
-    const DELAYED_IMPORTS_SET& GetDelayedImports() const { return DelayedImports; }
-    const EXPORTS_INFO& GetExportsInfo() const { return Exports; }
+    const SECTIONS_SET& GetSectionsInfo() { 
+        if (!SectionsParsed) {
+            FillSectionsInfo();
+            SectionsParsed = TRUE;
+        }
+        return Sections;
+    }
+    const RELOCS_SET& GetRelocsInfo() { 
+        if (!RelocsParsed) {
+            FillRelocsInfo();
+            RelocsParsed = TRUE;
+        }
+        return Relocs;
+    }
+    const IMPORTS_MAP& GetImportsInfo() { 
+        if (!ImportsParsed) {
+            FillImportsInfo();
+            ImportsParsed = TRUE;
+        }
+        return Imports;
+    }
+    const DELAYED_IMPORTS_SET& GetDelayedImports() {
+        if (!DelayedImportsParsed) {
+            FillDelayedImportsInfo();
+            DelayedImportsParsed = TRUE;
+        }
+        return DelayedImports;
+    }
+    const EXPORTS_INFO& GetExportsInfo() {
+        if (!ExportsParsed) {
+            FillExportsInfo();
+            ExportsParsed = TRUE;
+        }
+        return Exports;
+    }
 
     ULONG GetImageSize() const { return ImageSize; }
     PVOID GetImageBase() const { return ImageBase; }

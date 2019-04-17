@@ -47,6 +47,9 @@
     <Filter Include="Project Files\AvanguardDefence\APC Filter">
       <UniqueIdentifier>{25174eae-1070-4aa0-9ce8-50b58e857e0e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Timered Checkings">
+      <UniqueIdentifier>{cbe3a482-dc4c-434f-896e-e55a6971684e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Avanguard.cpp">
@@ -93,6 +96,12 @@
     </ClCompile>
     <ClCompile Include="AvanguardDefence\ApcFilter.cpp">
       <Filter>Project Files\AvanguardDefence\APC Filter</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\ThreatsHandler.cpp">
+      <Filter>Project Files\AvanguardDefence</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\TimeredCheckings.cpp">
+      <Filter>Project Files\AvanguardDefence\Timered Checkings</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -150,6 +159,15 @@
     <ClInclude Include="AvanguardDefence\ApcFilter.h">
       <Filter>Project Files\AvanguardDefence\APC Filter</Filter>
     </ClInclude>
+    <ClInclude Include="AvanguardDefence\ThreatsHandler.h">
+      <Filter>Project Files\AvanguardDefence</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\TimeredCheckings.h">
+      <Filter>Project Files\AvanguardDefence\Timered Checkings</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="SupportedOS.manifest">
@@ -160,5 +178,10 @@
     <MASM Include="AvanguardDefence\ApcStub.asm">
       <Filter>Project Files\AvanguardDefence\APC Filter</Filter>
     </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Avanguard.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

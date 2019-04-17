@@ -20,6 +20,7 @@
 #include "./AvanguardDefence/MemoryFilter.h"
 #include "./AvanguardDefence/ContextsFilter.h"
 #include "./AvanguardDefence/ApcFilter.h"
+#include "./AvanguardDefence/TimeredCheckings.h"
 
 #include "./AvanguardDefence/Logger.h"
 
@@ -56,7 +57,7 @@ static VOID AvnInitialize()
         Log(L"[x] Sfc initialization error!");
 #endif
 
-    if (DllFilter::EnableDllFilter())
+    if (DllFilter::EnableDllFilter(FALSE))
         Log(L"[v] Dll filter enabled!");
     else
         Log(L"[x] Dll filter initialization error!");
@@ -83,6 +84,17 @@ static VOID AvnInitialize()
         Log(L"[x] APC filter initialization error!");
 #endif
 
+#ifdef FEATURE_DLL_FILTER
+    DllFilter::CollectModulesInfo();
+#endif
+
+#ifdef FEATURE_TIMERED_CHECKINGS
+    if (TimeredCheckings::EnableTimeredCheckings())
+        Log(L"[v] Timered checkings enabled!");
+    else
+        Log(L"[x] Timered checkings initialization error!");
+#endif
+
     AvnGlobals.Flags.IsAvnInitialized = TRUE;
     Log(L"[v] Avn initialized!");
 }
@@ -94,6 +106,10 @@ static VOID AvnStartDefence()
 
 static VOID AvnStopDefence()
 {
+#ifdef FEATURE_TIMERED_CHECKINGS
+    TimeredCheckings::DisableTimeredCheckings();
+#endif
+
 #ifdef FEATURE_APC_FILTER
     ApcFilter::DisableApcFilter();
 #endif

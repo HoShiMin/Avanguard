@@ -16,18 +16,37 @@
 #include "AvnGlobals.h"
 #include "StacktraceChecker.h"
 
+#include "ThreatsHandler.h"
+
 #include "ContextsFilter.h"
+
+#include <string>
+#include "Logger.h"
 
 namespace ContextsFilter {
 
     static BOOL IsContextSwitchAllowed()
     {
-        switch (StacktraceChecker::CheckStackTrace()) {
+        PVOID UnknownFrame = NULL;
+        switch (StacktraceChecker::CheckStackTrace(&UnknownFrame)) {
         case StacktraceChecker::stValid:
         case StacktraceChecker::stError: // To avoid a false detections
         case StacktraceChecker::stWindowsHooks:
             return TRUE;
         default:
+            switch (Notifier::ReportContextSteal(UnknownFrame)) {
+            case Notifier::tdAllow:
+                Log(L"[v] Context switch allowed by external decision");
+                return TRUE;
+            case Notifier::tdBlockOrIgnore:
+            case Notifier::tdBlockOrTerminate:
+                Log(L"[x] Context switch denied by external decision");
+                return FALSE;
+            case Notifier::tdTerminate:
+                Log(L"[x] Context switch causes fastfail by external decision");
+                __fastfail(0);
+                break;
+            }
             return FALSE;
         }
     }

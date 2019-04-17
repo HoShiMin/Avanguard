@@ -19,6 +19,7 @@
 #endif
 
 typedef struct {
+
 } AVN_API, *PAVN_API;
 
 AVN_EXPORT PAVN_API Stub;

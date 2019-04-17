@@ -9,12 +9,29 @@
 
 #include <HookLib.h>
 
+#include "ThreatsHandler.h"
 #include "AvnGlobals.h"
+
+#include <string>
+#include "Logger.h"
 
 namespace AppInitDlls {
 
     DeclareHook(VOID, WINAPI, LoadAppInitDlls) 
     {
+        switch (Notifier::ReportAppInit(NULL)) {
+        case Notifier::tdAllow:
+            Log(L"[v] LoadAppInitDLLs allowed by external decision");
+            return CallOriginal(LoadAppInitDlls)();
+        case Notifier::tdBlockOrIgnore:
+        case Notifier::tdBlockOrTerminate:
+            Log(L"[x] LoadAppInitDLLs denied (skipped) by external decision");
+            return;
+        case Notifier::tdTerminate:
+            Log(L"[x] LoadAppInitDLLs caused fastfail by external decision");
+            __fastfail(0);
+            break;
+        }
         return;
     }
 

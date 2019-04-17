@@ -16,7 +16,9 @@
 
 #include <HookLib.h>
 
+#include <set>
 #include <map>
+#include <vector>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -25,8 +27,9 @@
 
 #include "Logger.h"
 
-#include <PEAnalyzer.h>
 #include <t1ha.h>
+
+#include "ThreatsHandler.h"
 
 #ifdef FEATURE_STACKTRACE_CHECK
     #include "StacktraceChecker.h"
@@ -35,59 +38,66 @@
     #endif
 #endif
 
+#include "DllFilter.h"
+
 namespace DllFilter {
 
     class KnownModulesStorage final {
     public:
         typedef struct {
+            LPCVOID VirtualAddress;
+            ULONG Size;
+        } SEC_INFO;
+
+        typedef struct {
             HMODULE Base;
             UINT64 Hash;
             ULONG Size;
             std::wstring Name;
+            std::vector<SEC_INFO> ExecutableSections;
         } MODULE_INFO;
     private:
         mutable RWLock Lock;
         std::map<HMODULE, MODULE_INFO> Modules;
-        static UINT64 CalcModuleHash(HMODULE hModule) {
-            try {
-                UINT64 Hash = 0;
-                PEAnalyzer pe(hModule, FALSE);
-                const auto& Sections = pe.GetSectionsInfo();
-                for (const auto& Section : Sections) {
-                    ULONG Type = Section.Characteristics;
-                    if ((Type & IMAGE_SCN_CNT_CODE) || (Type & IMAGE_SCN_MEM_EXECUTE)) {
-                        Hash ^= t1ha0(reinterpret_cast<PBYTE>(hModule) + Section.OffsetInMemory, Section.SizeInMemory, 0x1EE7C0DE);
-                    }
+        static void FillExecutableSection(HMODULE hModule, __out std::vector<SEC_INFO>& Sections) {
+            auto DosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(hModule);
+            auto NtHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(reinterpret_cast<PBYTE>(hModule) + DosHeader->e_lfanew);
+            WORD NumberOfSections = NtHeaders->FileHeader.NumberOfSections;
+            PIMAGE_SECTION_HEADER SectionHeader = IMAGE_FIRST_SECTION(NtHeaders);
+            for (unsigned short i = 0; i < NumberOfSections; i++, SectionHeader++) {
+                DWORD Characteristics = SectionHeader->Characteristics;
+                if (Characteristics & IMAGE_SCN_CNT_CODE || Characteristics & IMAGE_SCN_MEM_EXECUTE) {
+                    SEC_INFO SecInfo = {};
+                    SecInfo.VirtualAddress = reinterpret_cast<PBYTE>(hModule) + SectionHeader->VirtualAddress;
+                    SecInfo.Size = SectionHeader->Misc.VirtualSize;
+                    Sections.emplace_back(SecInfo);
                 }
-                return Hash;
-            }
-            catch (...) {
-                return 0; // We're unable to analyze this module
             }
         }
-        static UINT64 CalcModuleHashSafe(HMODULE hModule) {
+        static UINT64 CalcModuleHashSafe(const std::vector<SEC_INFO>& Sections) {
             __try {
-                return CalcModuleHash(hModule);
+                UINT64 Hash = 0;
+                for (const auto& Section : Sections) {
+                    Hash ^= t1ha0(Section.VirtualAddress, Section.Size, 0x1EE7C0DE);
+                }
+                return Hash;
             }
             __except (EXCEPTION_EXECUTE_HANDLER) {
                 return 0;
             }
         }
-        static VOID EnumModules(BOOL(*Callback)(PebTeb::PLDR_MODULE Module, PVOID Arg), PVOID Arg) {
-            const auto Peb = reinterpret_cast<PebTeb::PPEB>(__peb());
-            PebTeb::PPEB_LDR_DATA LdrData = Peb->Ldr;
-            const auto Header = &LdrData->InLoadOrderModuleList;
-            for (
-                auto Module = reinterpret_cast<PebTeb::PLDR_MODULE>(Header->Flink);
-                ;
-                Module = reinterpret_cast<PebTeb::PLDR_MODULE>(Module->InLoadOrderModuleList.Flink)
-            ) {
-                if (!Callback(Module, Arg) || Module->InLoadOrderModuleList.Flink == Header) break;
-            }
-        }
         static BOOL EnumModulesSafe(BOOL(*Callback)(PebTeb::PLDR_MODULE Module, PVOID Arg), PVOID Arg) {
             __try {
-                EnumModules(Callback, Arg);
+                const auto Peb = reinterpret_cast<PebTeb::PPEB>(__peb());
+                PebTeb::PPEB_LDR_DATA LdrData = Peb->Ldr;
+                const auto Header = &LdrData->InLoadOrderModuleList;
+                for (
+                    auto Module = reinterpret_cast<PebTeb::PLDR_MODULE>(Header->Flink);
+                    ;
+                    Module = reinterpret_cast<PebTeb::PLDR_MODULE>(Module->InLoadOrderModuleList.Flink)
+                    ) {
+                    if (!Callback(Module, Arg) || Module->InLoadOrderModuleList.Flink == Header) break;
+                }
                 return TRUE;
             }
             __except (EXCEPTION_EXECUTE_HANDLER) {
@@ -100,7 +110,8 @@ namespace DllFilter {
             
             MODULE_INFO Info = {};
             Info.Base = reinterpret_cast<HMODULE>(Module->BaseAddress);
-            Info.Hash = CalcModuleHashSafe(Info.Base);
+            FillExecutableSection(reinterpret_cast<HMODULE>(Module->BaseAddress), Info.ExecutableSections);
+            Info.Hash = CalcModuleHashSafe(Info.ExecutableSections);
             Info.Size = Module->SizeOfImage;
             
             LPCWSTR Path = NULL;
@@ -145,10 +156,13 @@ namespace DllFilter {
         }
         VOID Add(HMODULE hModule, ULONG Size, OPTIONAL PCUNICODE_STRING Name) {
             if (!hModule || !Size) return;
+
             MODULE_INFO Info = {};
             Info.Base = hModule;
-            Info.Hash = CalcModuleHashSafe(hModule);
             Info.Size = Size;
+            FillExecutableSection(hModule, Info.ExecutableSections);
+            Info.Hash = CalcModuleHashSafe(Info.ExecutableSections);
+
             if (Name && Name->Buffer && Name->Length) {
                 Info.Name.resize(Name->Length / sizeof(WCHAR));
                 memcpy(std::data(Info.Name), Name->Buffer, Name->Length);
@@ -185,6 +199,14 @@ namespace DllFilter {
             Lock.UnlockShared();
             return hModule;
         }
+        std::wstring GetModuleName(HMODULE hModule) const {
+            std::wstring Name;
+            Lock.LockShared();
+            const auto& Module = Modules.find(hModule);
+            if (Module != Modules.end()) Name = Module->second.Name;
+            Lock.UnlockShared();
+            return Name;
+        }
         BOOL IsAddressInKnownModule(PVOID Address) const {
             return GetModuleBase(Address) != NULL;
         }
@@ -193,7 +215,7 @@ namespace DllFilter {
             Lock.LockShared();
             const auto Module = Modules.find(hModule);
             BOOL IsValid = Module != Modules.end();
-            if (IsValid) IsValid = Module->second.Hash == CalcModuleHashSafe(hModule);
+            if (IsValid) IsValid = Module->second.Hash == CalcModuleHashSafe(Module->second.ExecutableSections);
             Lock.UnlockShared();
             return IsValid;
         }
@@ -202,9 +224,27 @@ namespace DllFilter {
             Lock.LockExclusive();
             auto Module = Modules.find(hModule);
             if (Module != Modules.end()) {
-                Module->second.Hash = CalcModuleHashSafe(hModule);
+                Module->second.Hash = CalcModuleHashSafe(Module->second.ExecutableSections);
             }
             Lock.UnlockExclusive();
+        }
+        VOID FindChangedModules(__out std::set<HMODULE>& ChangedModules) const {
+            ChangedModules.clear();
+            ULONG LdrLockState = 0;
+            PVOID LdrLockCookie = NULL;
+            Lock.LockShared();
+            NTSTATUS LdrStatus = LdrLockLoaderLock(LDR_LOCK_FLAG_RAISE_ON_ERROR, &LdrLockState, &LdrLockCookie);
+            BOOL Locked = NT_SUCCESS(LdrStatus);
+            if (NT_SUCCESS(LdrStatus) && LdrLockState == LDR_LOCK_STATE_ENTERED) {
+                for (const auto& Module : Modules) {
+                    UINT64 CurrentHash = CalcModuleHashSafe(Module.second.ExecutableSections);
+                    if (Module.second.Hash != CurrentHash) {
+                        ChangedModules.emplace(Module.second.Base);
+                    }
+                }
+                LdrUnlockLoaderLock(LDR_LOCK_FLAG_RAISE_ON_ERROR, LdrLockCookie);
+            }
+            Lock.UnlockShared();
         }
     };
 
@@ -227,7 +267,7 @@ namespace DllFilter {
             Lock.UnlockExclusive();
         }
 
-        BOOL Exists(const std::wstring& ModuleName) {
+        BOOL Exists(const std::wstring& ModuleName) const {
             Lock.LockShared();
             BOOL Ignored = Modules.find(ModuleName) != Modules.end();
             Lock.UnlockShared();
@@ -274,14 +314,18 @@ namespace DllFilter {
         // Check the stacktrace to detect a __ClientLoadLibrary (windows hooks) or unknown module/memory:
         {
             using namespace StacktraceChecker;
-            STACKTRACE_CHECK_RESULT CheckResult = CheckStackTrace();
+            Notifier::THREAT_DECISION Decision = Notifier::tdAllow;
+            PVOID UnknownFrame = NULL;
+            STACKTRACE_CHECK_RESULT CheckResult = CheckStackTrace(&UnknownFrame);
             if (CheckResult != stValid) {
                 switch (CheckResult) {
                 case stUnknownModule:
-                    Log(L"[x] Unknown caller module for LdrLoadLibrary, cancelled");
+                    Log(L"[x] Unknown caller module for LdrLoadLibrary");
+                    Decision = Notifier::ReportUnknownOriginModload(UnknownFrame, ModuleName.c_str());
                     break;
                 case stUnknownMemory:
-                    Log(L"[x] Unknown caller memory for LdrLoadLibrary, cancelled");
+                    Log(L"[x] Unknown caller memory for LdrLoadLibrary");
+                    Decision = Notifier::ReportUnknownOriginModload(UnknownFrame, ModuleName.c_str());
                     break;
 #ifdef FEATURE_WINDOWS_HOOKS_FILTER
                 case stWindowsHooks:
@@ -292,11 +336,30 @@ namespace DllFilter {
                         return CallOriginal(LdrLoadDll)(PathToFile, Flags, ModuleFileName, ModuleHandle);
                     }
 #endif // FEATURE_ALLOW_SYSTEM_MODULES
-                    FilterData.IgnoredModules.Add(ModuleName);
-                    Log(L"[x] LdrLoadLibrary called from windows hooks handler, cancelled");
+                    Log(L"[x] LdrLoadLibrary called from windows hooks handler");
+                    Decision = Notifier::ReportWinHooks(ModuleName.c_str());
                     break;
 #endif // FEATURE_WINDOWS_HOOKS_FILTER
                 }
+
+                // Final decision handling:
+                switch (Decision) {
+                case Notifier::tdAllow:
+                    Log(L"[v] LdrLoadLibrary allowed by external decision");
+                    return CallOriginal(LdrLoadDll)(PathToFile, Flags, ModuleFileName, ModuleHandle);
+                case Notifier::tdBlockOrIgnore:
+                case Notifier::tdBlockOrTerminate:
+                    if (CheckResult == stWindowsHooks) {
+                        FilterData.IgnoredModules.Add(ModuleName);
+                    }
+                    Log(L"[x] LdrLoadLibrary denied (skipped) by external decision");
+                    break;
+                case Notifier::tdTerminate:
+                    Log(L"[x] LdrLoadLibrary caused fastfail by external decision");
+                    __fastfail(0);
+                    break;
+                }
+
                 if (ModuleHandle) *ModuleHandle = NULL;
                 return STATUS_NOT_FOUND;
             }
@@ -348,12 +411,12 @@ namespace DllFilter {
         }
     }
 
-    BOOL EnableDllFilter()
+    BOOL EnableDllFilter(BOOL InitialCollectModulesInfo)
     {
         if (FilterData.Cookie) return TRUE;
 
-        // Initializing all loaded modules:
-        FilterData.KnownModules.Collect();
+        if (InitialCollectModulesInfo)
+            CollectModulesInfo();
 
         if (!FilterData.LdrRegisterDllNotification) {
             FilterData.LdrRegisterDllNotification = reinterpret_cast<_LdrRegisterDllNotification>(
@@ -396,9 +459,24 @@ namespace DllFilter {
         FilterData.Cookie = NULL;
     }
 
+    VOID CollectModulesInfo()
+    {
+        FilterData.KnownModules.Collect();
+    }
+
+    std::wstring GetModuleName(HMODULE hModule)
+    {
+        return FilterData.KnownModules.GetModuleName(hModule);
+    }
+
     BOOL IsAddressInKnownModule(PVOID Address)
     {
         return FilterData.KnownModules.IsAddressInKnownModule(Address);
+    }
+
+    VOID FindChangedModules(__out std::set<HMODULE>& ChangedModules)
+    {
+        FilterData.KnownModules.FindChangedModules(ChangedModules);
     }
 }
 #endif

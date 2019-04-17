@@ -41,7 +41,49 @@ inline unsigned int __tid()
 #endif
 }
 
-extern "C" NTSYSAPI NTSTATUS NTAPI NtQueueApcThread(
+#define DECLARE_NTAPI(ReturnType, Convention, Name, ...) \
+typedef ReturnType (Convention *_##Name)(__VA_ARGS__); \
+extern "C" __declspec(dllimport) ReturnType Convention Name(__VA_ARGS__)
+
+DECLARE_NTAPI(
+    NTSTATUS, NTAPI, RtlCreateTimerQueue,
+    OUT PHANDLE TimerQueueHandle
+);
+
+DECLARE_NTAPI(
+    NTSTATUS, NTAPI, RtlDeleteTimerQueue,
+    IN HANDLE TimerQueueHandle
+);
+
+DECLARE_NTAPI(
+    NTSTATUS, NTAPI, RtlCreateTimer,
+    IN HANDLE TimerQueueHandle,
+    OUT PHANDLE Handle,
+    IN WAITORTIMERCALLBACKFUNC Function,
+    IN PVOID Context,
+    IN DWORD DueTime,
+    IN DWORD Period,
+    IN ULONG Flags
+);
+
+DECLARE_NTAPI(
+    NTSTATUS, NTAPI, RtlDeleteTimer,
+    IN HANDLE TimerQueueHandle,
+    IN HANDLE TimerHandle,
+    IN HANDLE CompletionEvent
+);
+
+#define LDR_LOCK_FLAG_RAISE_ON_ERROR (0x01)
+#define LDR_LOCK_FLAG_RETURN_IF_BUSY (0x02)
+#define LDR_LOCK_STATE_NOT_ENTERED   (0x00)
+#define LDR_LOCK_STATE_ENTERED       (0x01)
+#define LDR_LOCK_STATE_BUSY          (0x02)
+
+DECLARE_NTAPI(NTSTATUS, NTAPI, LdrLockLoaderLock, IN ULONG Flags, IN PULONG State, OUT PVOID* Cookie);
+DECLARE_NTAPI(NTSTATUS, NTAPI, LdrUnlockLoaderLock, IN ULONG Flags, IN PVOID Cookie);
+
+DECLARE_NTAPI(
+    NTSTATUS, NTAPI, NtQueueApcThread,
     IN HANDLE ThreadHandle,
     IN PIO_APC_ROUTINE ApcRoutine,
     IN OPTIONAL PVOID ApcRoutineContext,
@@ -49,7 +91,8 @@ extern "C" NTSYSAPI NTSTATUS NTAPI NtQueueApcThread(
     IN ULONG ApcReserved
 );
 
-extern "C" NTSYSAPI NTSTATUS NTAPI NtTerminateThread(
+DECLARE_NTAPI(
+    NTSTATUS, NTAPI, NtTerminateThread,
     IN HANDLE ThreadHandle,
     IN NTSTATUS ExitStatus
 );
@@ -58,7 +101,8 @@ typedef enum _WRK_MEMORY_INFORMATION_CLASS {
     MemoryBasicInformation
 } WRK_MEMORY_INFORMATION_CLASS, *PWRK_MEMORY_INFORMATION_CLASS;
 
-extern "C" NTSYSAPI NTSTATUS NTAPI NtQueryVirtualMemory(
+DECLARE_NTAPI(
+    NTSTATUS, NTAPI, NtQueryVirtualMemory,
     IN HANDLE ProcessHandle,
     IN PVOID BaseAddress,
     IN WRK_MEMORY_INFORMATION_CLASS MemoryInformationClass,
@@ -67,12 +111,123 @@ extern "C" NTSYSAPI NTSTATUS NTAPI NtQueryVirtualMemory(
     OUT OPTIONAL PSIZE_T ResultLength
 );
 
-extern "C" NTSYSAPI NTSTATUS NTAPI NtContinue(
+// 'WRK' is the custom prefix to bypass these structs redeclaration error:
+
+typedef enum _WRK_KTHREAD_STATE : ULONG {
+    Initialized,
+    Ready,
+    Running,
+    Standby,
+    Terminated,
+    Waiting,
+    Transition,
+    DeferredReady,
+    GateWaitObsolete,
+    WaitingForProcessInSwap,
+    MaximumThreadState
+} WRK_KTHREAD_STATE, *PWRK_KTHREAD_STATE;
+
+typedef enum _WRK_KWAIT_REASON : ULONG {
+    Executive,
+    FreePage,
+    PageIn,
+    PoolAllocation,
+    DelayExecution,
+    Suspended,
+    UserRequest,
+    WrExecutive,
+    WrFreePage,
+    WrPageIn,
+    WrPoolAllocation,
+    WrDelayExecution,
+    WrSuspended,
+    WrUserRequest,
+    WrEventPair,
+    WrQueue,
+    WrLpcReceive,
+    WrLpcReply,
+    WrVirtualMemory,
+    WrPageOut,
+    WrRendezvous,
+    WrKeyedEvent,
+    WrTerminated,
+    WrProcessInSwap,
+    WrCpuRateControl,
+    WrCalloutStack,
+    WrKernel,
+    WrResource,
+    WrPushLock,
+    WrMutex,
+    WrQuantumEnd,
+    WrDispatchInt,
+    WrPreempted,
+    WrYieldExecution,
+    WrFastMutex,
+    WrGuardedMutex,
+    WrRundown,
+    WrAlertByThreadId,
+    WrDeferredPreempt,
+    MaximumWaitReason
+} WRK_KWAIT_REASON, *PWRK_KWAIT_REASON;
+
+typedef struct _WRK_SYSTEM_THREAD_INFORMATION {
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER CreateTime;
+    ULONG WaitTime;
+    PVOID StartAddress;
+    CLIENT_ID ClientId;
+    KPRIORITY Priority;
+    LONG BasePriority;
+    ULONG ContextSwitches;
+    WRK_KTHREAD_STATE ThreadState; // ULONG
+    WRK_KWAIT_REASON WaitReason; // ULONG
+} WRK_SYSTEM_THREAD_INFORMATION, * PWRK_SYSTEM_THREAD_INFORMATION;
+
+typedef struct _WRK_SYSTEM_PROCESS_INFORMATION {
+    ULONG NextEntryOffset;
+    ULONG NumberOfThreads;
+    LARGE_INTEGER SpareLi1;
+    LARGE_INTEGER SpareLi2;
+    LARGE_INTEGER SpareLi3;
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER KernelTime;
+    UNICODE_STRING ImageName;
+    KPRIORITY BasePriority;
+    HANDLE UniqueProcessId;
+    HANDLE InheritedFromUniqueProcessId;
+    ULONG HandleCount;
+    ULONG SessionId;
+    ULONG_PTR PageDirectoryBase;
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+    SIZE_T PrivatePageCount;
+    LARGE_INTEGER ReadOperationCount;
+    LARGE_INTEGER WriteOperationCount;
+    LARGE_INTEGER OtherOperationCount;
+    LARGE_INTEGER ReadTransferCount;
+    LARGE_INTEGER WriteTransferCount;
+    LARGE_INTEGER OtherTransferCount;
+    SYSTEM_THREAD_INFORMATION Threads[1];
+} WRK_SYSTEM_PROCESS_INFORMATION, * PWRK_SYSTEM_PROCESS_INFORMATION;
+
+DECLARE_NTAPI(
+    NTSTATUS, NTAPI, NtContinue,
     IN PCONTEXT ThreadContext,
     IN BOOLEAN RaiseAlert
 );
 
-extern "C" NTSYSAPI NTSTATUS NTAPI NtTestAlert();
+DECLARE_NTAPI(NTSTATUS, NTAPI, NtTestAlert);
 
 #define LDR_DLL_NOTIFICATION_REASON_LOADED   1
 #define LDR_DLL_NOTIFICATION_REASON_UNLOADED 2
