@@ -230,19 +230,12 @@ namespace DllFilter {
         }
         VOID FindChangedModules(__out std::set<HMODULE>& ChangedModules) const {
             ChangedModules.clear();
-            ULONG LdrLockState = 0;
-            PVOID LdrLockCookie = NULL;
             Lock.LockShared();
-            NTSTATUS LdrStatus = LdrLockLoaderLock(LDR_LOCK_FLAG_RAISE_ON_ERROR, &LdrLockState, &LdrLockCookie);
-            BOOL Locked = NT_SUCCESS(LdrStatus);
-            if (NT_SUCCESS(LdrStatus) && LdrLockState == LDR_LOCK_STATE_ENTERED) {
-                for (const auto& Module : Modules) {
-                    UINT64 CurrentHash = CalcModuleHashSafe(Module.second.ExecutableSections);
-                    if (Module.second.Hash != CurrentHash) {
-                        ChangedModules.emplace(Module.second.Base);
-                    }
+            for (const auto& Module : Modules) {
+                UINT64 CurrentHash = CalcModuleHashSafe(Module.second.ExecutableSections);
+                if (CurrentHash && Module.second.Hash != CurrentHash) {
+                    ChangedModules.emplace(Module.second.Base);
                 }
-                LdrUnlockLoaderLock(LDR_LOCK_FLAG_RAISE_ON_ERROR, LdrLockCookie);
             }
             Lock.UnlockShared();
         }

@@ -15,7 +15,7 @@
 #define FEATURE_TIMERED_CHECKINGS /* Find modified modules and unknown memory by timer */
 
 #ifdef FEATURE_TIMERED_CHECKINGS
-    #define TIMERED_CHECKINGS_INTERVAL (200)
+    #define TIMERED_CHECKINGS_INTERVAL (1000)
 #endif
 
 #if defined FEATURE_DLL_FILTER || defined FEATURE_MEMORY_FILTER
