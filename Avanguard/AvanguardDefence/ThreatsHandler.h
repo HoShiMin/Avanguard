@@ -11,6 +11,7 @@ namespace Notifier {
         ttApc,
         ttContextSteal,
         ttModifiedModule,
+        ttUnknownMemory,
         ttUnknown
     };
 
@@ -46,6 +47,11 @@ namespace Notifier {
         const wchar_t* Name;
     };
 
+    struct UNKNOWN_MEMORY_INFO {
+        void* AllocationBase;
+        size_t Size;
+    };
+
     struct THREAT_INFO {
         union {
             THREAD_INFO* RemoteThreadInfo;
@@ -57,6 +63,7 @@ namespace Notifier {
             APC_INFO* ApcInfo;
             CONTEXT_STEAL_INFO* ContextStealInfo;
             MODIFIED_MODULE_INFO* ModifiedModuleInfo;
+            UNKNOWN_MEMORY_INFO* UnknownMemoryInfo;
             void* ThreatInfo;
         } Info;
         THREAT_TYPE Type;
@@ -85,4 +92,5 @@ namespace Notifier {
     THREAT_DECISION ReportApc(void* ApcRoutine, void* Argument);
     THREAT_DECISION ReportContextSteal(void* UnknownMemory);
     THREAT_DECISION ReportModifiedModule(void* ModuleBase, const wchar_t* Name);
+    THREAT_DECISION ReportUnknownMemory(void* AllocationBase, size_t Size);
 }

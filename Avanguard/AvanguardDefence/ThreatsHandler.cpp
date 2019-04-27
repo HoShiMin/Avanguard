@@ -138,4 +138,11 @@ namespace Notifier {
         ThreatInfo.Name = Name;
         return Report(ttModifiedModule, &ThreatInfo);
     }
+
+    THREAT_DECISION ReportUnknownMemory(void* AllocationBase, size_t Size) {
+        UNKNOWN_MEMORY_INFO ThreatInfo;
+        ThreatInfo.AllocationBase = AllocationBase;
+        ThreatInfo.Size = Size;
+        return Report(ttUnknownMemory, &ThreatInfo);
+    }
 }

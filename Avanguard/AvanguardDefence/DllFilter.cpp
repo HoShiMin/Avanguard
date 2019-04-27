@@ -38,15 +38,23 @@
     #endif
 #endif
 
+#ifdef FEATURE_MEMORY_FILTER
+    #include "MemoryFilter.h"
+#endif
+
 #include "DllFilter.h"
 
 namespace DllFilter {
 
     class KnownModulesStorage final {
     public:
-        typedef struct {
+        typedef struct _SEC_INFO {
             LPCVOID VirtualAddress;
             ULONG Size;
+            _SEC_INFO(LPCVOID VirtualAddress, ULONG Size) {
+                this->VirtualAddress = VirtualAddress;
+                this->Size = Size;
+            }
         } SEC_INFO;
 
         typedef struct {
@@ -60,6 +68,7 @@ namespace DllFilter {
         mutable RWLock Lock;
         std::map<HMODULE, MODULE_INFO> Modules;
         static void FillExecutableSection(HMODULE hModule, __out std::vector<SEC_INFO>& Sections) {
+            Sections.clear();
             auto DosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(hModule);
             auto NtHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(reinterpret_cast<PBYTE>(hModule) + DosHeader->e_lfanew);
             WORD NumberOfSections = NtHeaders->FileHeader.NumberOfSections;
@@ -67,10 +76,10 @@ namespace DllFilter {
             for (unsigned short i = 0; i < NumberOfSections; i++, SectionHeader++) {
                 DWORD Characteristics = SectionHeader->Characteristics;
                 if (Characteristics & IMAGE_SCN_CNT_CODE || Characteristics & IMAGE_SCN_MEM_EXECUTE) {
-                    SEC_INFO SecInfo = {};
-                    SecInfo.VirtualAddress = reinterpret_cast<PBYTE>(hModule) + SectionHeader->VirtualAddress;
-                    SecInfo.Size = SectionHeader->Misc.VirtualSize;
-                    Sections.emplace_back(SecInfo);
+                    Sections.emplace_back(
+                        reinterpret_cast<PBYTE>(hModule) + SectionHeader->VirtualAddress,
+                        SectionHeader->Misc.VirtualSize
+                    );
                 }
             }
         }
@@ -95,7 +104,7 @@ namespace DllFilter {
                     auto Module = reinterpret_cast<PebTeb::PLDR_MODULE>(Header->Flink);
                     ;
                     Module = reinterpret_cast<PebTeb::PLDR_MODULE>(Module->InLoadOrderModuleList.Flink)
-                    ) {
+                ) {
                     if (!Callback(Module, Arg) || Module->InLoadOrderModuleList.Flink == Header) break;
                 }
                 return TRUE;
@@ -145,6 +154,7 @@ namespace DllFilter {
         VOID Collect() {
             std::map<HMODULE, MODULE_INFO> Local;
             EnumModulesSafe(EnumModulesCallback, &Local);
+
             Lock.LockExclusive();
             Modules.swap(Local);
             Lock.UnlockExclusive();
@@ -154,6 +164,7 @@ namespace DllFilter {
             Modules.clear();
             Lock.UnlockExclusive();
         }
+
         VOID Add(HMODULE hModule, ULONG Size, OPTIONAL PCUNICODE_STRING Name) {
             if (!hModule || !Size) return;
 
@@ -161,6 +172,15 @@ namespace DllFilter {
             Info.Base = hModule;
             Info.Size = Size;
             FillExecutableSection(hModule, Info.ExecutableSections);
+
+#ifdef FEATURE_MEMORY_FILTER
+            MemoryFilter::BeginMemoryUpdate();
+            for (const auto& Sec : Info.ExecutableSections) {
+                MemoryFilter::AddKnownMemory(Sec.VirtualAddress);
+            }
+            MemoryFilter::EndMemoryUpdate();
+#endif
+
             Info.Hash = CalcModuleHashSafe(Info.ExecutableSections);
 
             if (Name && Name->Buffer && Name->Length) {
@@ -408,9 +428,6 @@ namespace DllFilter {
     {
         if (FilterData.Cookie) return TRUE;
 
-        if (InitialCollectModulesInfo)
-            CollectModulesInfo();
-
         if (!FilterData.LdrRegisterDllNotification) {
             FilterData.LdrRegisterDllNotification = reinterpret_cast<_LdrRegisterDllNotification>(
                 _GetProcAddress(AvnGlobals.hModules.hNtdll, "LdrRegisterDllNotification")
@@ -441,7 +458,12 @@ namespace DllFilter {
         }
 
         SetHookTarget(LdrLoadDll, _GetProcAddress(AvnGlobals.hModules.hNtdll, "LdrLoadDll"));
-        return EnableHook(LdrLoadDll);
+        BOOL HookStatus = EnableHook(LdrLoadDll);
+
+        if (InitialCollectModulesInfo)
+            CollectModulesInfo();
+
+        return HookStatus;
     }
 
     VOID DisableDllFilter()

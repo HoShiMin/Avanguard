@@ -24,6 +24,7 @@
 #endif
 
 #ifdef FEATURE_MEMORY_FILTER
+#include <vector>
 #include "MemoryFilter.h"
 #endif
 
@@ -59,7 +60,19 @@ namespace TimeredCheckings {
 #ifdef FEATURE_MEMORY_FILTER
     static VOID FindUnknownMemory()
     {
-
+        std::vector<MemoryFilter::MEMORY_REGION_INFO> UnknownRegions;
+        MemoryFilter::FindUnknownMemoryRegions(UnknownRegions);
+        for (const auto& Region : UnknownRegions) {
+            switch (Notifier::ReportUnknownMemory(Region.BaseAddress, Region.Size)) {
+            case Notifier::tdAllow:
+                continue;
+            case Notifier::tdBlockOrIgnore:
+            case Notifier::tdBlockOrTerminate:
+            case Notifier::tdTerminate:
+                __fastfail(0);
+                break;
+            }
+        }
     }
 #endif
 

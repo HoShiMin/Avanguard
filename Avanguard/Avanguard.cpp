@@ -64,7 +64,7 @@ static VOID AvnInitialize()
 #endif
 
 #ifdef FEATURE_MEMORY_FILTER
-    if (MemoryFilter::EnableMemoryFilter())
+    if (MemoryFilter::EnableMemoryFilter(FALSE))
         Log(L"[v] Memory filter enabled!");
     else
         Log(L"[x] Memory filter initialization error!");
@@ -86,6 +86,10 @@ static VOID AvnInitialize()
 
 #ifdef FEATURE_DLL_FILTER
     DllFilter::CollectModulesInfo();
+#endif
+
+#ifdef FEATURE_MEMORY_FILTER
+    MemoryFilter::CollectMemoryInfo();
 #endif
 
 #ifdef FEATURE_TIMERED_CHECKINGS
