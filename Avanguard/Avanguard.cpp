@@ -21,7 +21,7 @@
 #include "./AvanguardDefence/ContextsFilter.h"
 #include "./AvanguardDefence/ApcFilter.h"
 #include "./AvanguardDefence/TimeredCheckings.h"
-
+#include "./AvanguardDefence/ThreatsHandler.h"
 #include "./AvanguardDefence/Logger.h"
 
 #include <HookLib.h>
@@ -31,6 +31,11 @@
 #pragma comment(lib, "Zydis.lib")
 #pragma comment(lib, "HookLib.lib")
 #pragma comment(lib, "t1ha-static.lib")
+
+static Notifier::THREAT_DECISION CALLBACK ThreatNotifier(Notifier::THREAT_INFO* Info)
+{
+    return Notifier::tdBlockOrIgnore;
+}
 
 static VOID AvnInitialize()
 {
@@ -98,6 +103,8 @@ static VOID AvnInitialize()
     else
         Log(L"[x] Timered checkings initialization error!");
 #endif
+
+    Notifier::Subscribe(ThreatNotifier);
 
     AvnGlobals.Flags.IsAvnInitialized = TRUE;
     Log(L"[v] Avn initialized!");

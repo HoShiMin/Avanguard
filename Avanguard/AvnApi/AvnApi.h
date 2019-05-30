@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ThreatTypes.h>
+
 #ifdef __cplusplus
     #ifdef AVANGUARD_EXPORTS
         // We're building this library:
@@ -19,7 +21,14 @@
 #endif
 
 typedef struct {
-
+    bool(__stdcall* IsStaticLoaded)();
+    bool(__stdcall* IsEnabled)();
+    bool(__stdcall* Start)();
+    void(__stdcall* Stop)();
+    void(__stdcall* Lock)();
+    void(__stdcall* Unlock)();
+    void(__stdcall* Subscribe)(ThreatTypes::_ThreatNotifier Notifier);
+    void(__stdcall* Unsubscribe)(ThreatTypes::_ThreatNotifier Notifier);
 } AVN_API, *PAVN_API;
 
 AVN_EXPORT PAVN_API Stub;

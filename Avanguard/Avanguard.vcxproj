@@ -79,7 +79,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>AVN_EXPORTS;WIN32;_DEBUG;AVANGUARD_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\Supplementation;.\t1ha\;.\xorstr\include;.\HookLib\HookLib\HookLib\;.\HookLib\HookLib\Zydis\include\Zydis;.\HookLib\HookLib\Zydis\msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Supplementation;.\AvnApi;.\JNI;.\t1ha;.\xorstr\include;.\HookLib\HookLib\HookLib\;.\HookLib\HookLib\Zydis\include\Zydis;.\HookLib\HookLib\Zydis\msvc</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -94,6 +94,8 @@
       </IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>msvcrtd</IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration)\t1ha-static;.\HookLib\HookLib\Zydis\msvc\bin\DebugX86\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>SupportedOS.manifest</AdditionalManifestFiles>
@@ -107,7 +109,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>AVN_EXPORTS;_DEBUG;AVANGUARD_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\Supplementation;.\t1ha\;.\xorstr\include;.\HookLib\HookLib\HookLib\;.\HookLib\HookLib\Zydis\include\Zydis;.\HookLib\HookLib\Zydis\msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Supplementation;.\AvnApi;.\JNI;.\t1ha;.\xorstr\include;.\HookLib\HookLib\HookLib\;.\HookLib\HookLib\Zydis\include\Zydis;.\HookLib\HookLib\Zydis\msvc</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -121,6 +123,8 @@
       </IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>msvcrtd</IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration)\t1ha-static;.\HookLib\HookLib\Zydis\msvc\bin\DebugX64\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>SupportedOS.manifest</AdditionalManifestFiles>
@@ -136,7 +140,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>AVN_EXPORTS;WIN32;NDEBUG;AVANGUARD_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\Supplementation;.\t1ha\;.\xorstr\include;.\HookLib\HookLib\HookLib\;.\HookLib\HookLib\Zydis\include\Zydis;.\HookLib\HookLib\Zydis\msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Supplementation;.\AvnApi;.\JNI;.\t1ha;.\xorstr\include;.\HookLib\HookLib\HookLib\;.\HookLib\HookLib\Zydis\include\Zydis;.\HookLib\HookLib\Zydis\msvc</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -158,6 +162,8 @@
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration)\t1ha-static;.\HookLib\HookLib\Zydis\msvc\bin\ReleaseX86\</AdditionalLibraryDirectories>
       <Profile>true</Profile>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>SupportedOS.manifest</AdditionalManifestFiles>
@@ -173,7 +179,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>AVN_EXPORTS;NDEBUG;AVANGUARD_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\Supplementation;.\t1ha\;.\xorstr\include;.\HookLib\HookLib\HookLib\;.\HookLib\HookLib\Zydis\include\Zydis;.\HookLib\HookLib\Zydis\msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Supplementation;.\AvnApi;.\JNI;.\t1ha;.\xorstr\include;.\HookLib\HookLib\HookLib\;.\HookLib\HookLib\Zydis\include\Zydis;.\HookLib\HookLib\Zydis\msvc</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -194,6 +200,8 @@
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration)\t1ha-static;.\HookLib\HookLib\Zydis\msvc\bin\ReleaseX64\</AdditionalLibraryDirectories>
       <Profile>true</Profile>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>SupportedOS.manifest</AdditionalManifestFiles>
@@ -207,6 +215,7 @@
     <ClCompile Include="AvanguardDefence\AvnGlobals.cpp" />
     <ClCompile Include="AvanguardDefence\ContextsFilter.cpp" />
     <ClCompile Include="AvanguardDefence\DllFilter.cpp" />
+    <ClCompile Include="AvanguardDefence\JavaBindings.cpp" />
     <ClCompile Include="AvanguardDefence\Logger.cpp" />
     <ClCompile Include="AvanguardDefence\MemoryFilter.cpp" />
     <ClCompile Include="AvanguardDefence\ThreatsHandler.cpp" />
@@ -225,6 +234,7 @@
     <ClInclude Include="AvanguardDefence\AvnGlobals.h" />
     <ClInclude Include="AvanguardDefence\ContextsFilter.h" />
     <ClInclude Include="AvanguardDefence\DllFilter.h" />
+    <ClInclude Include="AvanguardDefence\JavaBindings.h" />
     <ClInclude Include="AvanguardDefence\Locks.h" />
     <ClInclude Include="AvanguardDefence\Logger.h" />
     <ClInclude Include="AvanguardDefence\MemoryFilter.h" />
@@ -236,6 +246,9 @@
     <ClInclude Include="AvanguardDefence\TimeredCheckings.h" />
     <ClInclude Include="AvanguardDefence\WindowsHooksFilter.h" />
     <ClInclude Include="AvnApi\AvnApi.h" />
+    <ClInclude Include="AvnApi\ThreatTypes.h" />
+    <ClInclude Include="JNI\jni.h" />
+    <ClInclude Include="JNI\jni_md.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Supplementation\PEAnalyzer.h" />
     <ClInclude Include="Supplementation\StringsAPI.h" />

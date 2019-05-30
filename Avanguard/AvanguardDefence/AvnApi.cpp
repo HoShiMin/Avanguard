@@ -9,4 +9,3 @@
 static AVN_API AvnApi = {};
 
 AVN_EXPORT PAVN_API Stub = &AvnApi;
-

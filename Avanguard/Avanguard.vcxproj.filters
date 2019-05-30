@@ -50,6 +50,12 @@
     <Filter Include="Project Files\AvanguardDefence\Timered Checkings">
       <UniqueIdentifier>{cbe3a482-dc4c-434f-896e-e55a6971684e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Java Bindings">
+      <UniqueIdentifier>{3791905e-cf6e-4dfe-a435-2517cd62d719}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Files\AvanguardDefence\Java Bindings\JNI">
+      <UniqueIdentifier>{96ceaee4-18ba-48f2-9bbd-3c6908f2e9bd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Avanguard.cpp">
@@ -102,6 +108,9 @@
     </ClCompile>
     <ClCompile Include="AvanguardDefence\TimeredCheckings.cpp">
       <Filter>Project Files\AvanguardDefence\Timered Checkings</Filter>
+    </ClCompile>
+    <ClCompile Include="AvanguardDefence\JavaBindings.cpp">
+      <Filter>Project Files\AvanguardDefence\Java Bindings</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -167,6 +176,18 @@
     </ClInclude>
     <ClInclude Include="AvanguardDefence\TimeredCheckings.h">
       <Filter>Project Files\AvanguardDefence\Timered Checkings</Filter>
+    </ClInclude>
+    <ClInclude Include="JNI\jni.h">
+      <Filter>Project Files\AvanguardDefence\Java Bindings\JNI</Filter>
+    </ClInclude>
+    <ClInclude Include="JNI\jni_md.h">
+      <Filter>Project Files\AvanguardDefence\Java Bindings\JNI</Filter>
+    </ClInclude>
+    <ClInclude Include="AvanguardDefence\JavaBindings.h">
+      <Filter>Project Files\AvanguardDefence\Java Bindings</Filter>
+    </ClInclude>
+    <ClInclude Include="AvnApi\ThreatTypes.h">
+      <Filter>Project Files\AvnApi</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

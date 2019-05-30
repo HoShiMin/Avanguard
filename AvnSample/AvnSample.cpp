@@ -1,5 +1,7 @@
 ﻿#include <cstdio>
 #include <vector>
+#include <string>
+#include <filesystem>
 
 #define WIN32_NO_STATUS
 #include <Windows.h>
@@ -388,8 +390,29 @@ DWORD WINAPI Thread(PVOID Arg)
 }
 #endif
 
+template <typename T>
+auto get_value(T t) {
+    if constexpr (std::is_pointer_v<T>)
+        return *t;
+    else
+        return t;
+}
+
 int main()
 {
+    int val = 10;
+    val = get_value(val);
+    val = get_value(&val);
+    if (val != 10) __debugbreak();
+
+    int a = std::stoi("7", nullptr, 16);
+    if constexpr ((2 + 2) != 5) {
+        printf("123\r\n");
+    }
+    else {
+        printf("123\r\n");
+    }
+
 #ifdef _AMD64_
     DWORD ThreadId = 0;
     HANDLE hThread = CreateThread(NULL, 0, Thread, NULL, 0, &ThreadId);
